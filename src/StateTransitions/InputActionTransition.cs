@@ -1,7 +1,8 @@
 using System;
 using Godot;
+using Raele.Supercon2D.StateControllers;
 
-namespace Raele.Supercon2D.StateControllers;
+namespace Raele.Supercon2D.StateTransitions;
 
 public partial class InputActionTransition : StateController
 {

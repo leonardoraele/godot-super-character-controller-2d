@@ -6,6 +6,12 @@ namespace Raele.Supercon2D.StateControllers;
 public partial class StateController : Node
 {
 	// -----------------------------------------------------------------------------------------------------------------
+	// EXPORTS
+	// -----------------------------------------------------------------------------------------------------------------
+
+	[Export] public bool Enabled = true;
+
+	// -----------------------------------------------------------------------------------------------------------------
 	// PROPERTIES
 	// -----------------------------------------------------------------------------------------------------------------
 
@@ -28,7 +34,7 @@ public partial class StateController : Node
 	public override void _Process(double delta)
 	{
 		base._Process(delta);
-		if (this.State.IsActive == true)
+		if (this.State.IsActive && this.Enabled)
 		{
 			this._ProcessActive(delta);
 		}
@@ -37,7 +43,7 @@ public partial class StateController : Node
 	public override void _PhysicsProcess(double delta)
 	{
 		base._PhysicsProcess(delta);
-		if (this.State?.IsActive == true)
+		if (this.State.IsActive && this.Enabled)
 		{
 			this._PhysicsProcessActive(delta);
 		}

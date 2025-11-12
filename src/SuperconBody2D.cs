@@ -98,6 +98,9 @@ public partial class SuperconBody2D : CharacterBody2D
 	public SuperconStateMachine StateMachine => field != null ? field : field = this.RequireChild<SuperconStateMachine>();
 	public SuperconInputManager InputManager => field != null ? field : field = this.RequireChild<SuperconInputManager>();
 	public Vector2 LastOnFloorPosition { get; private set; }
+	public TimeSpan TimeOnFloor { get; private set; } = TimeSpan.Zero;
+	public TimeSpan TimeOnCeiling { get; private set; } = TimeSpan.Zero;
+	public TimeSpan TimeOnWall { get; private set; } = TimeSpan.Zero;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// PROPERTIES
@@ -148,6 +151,7 @@ public partial class SuperconBody2D : CharacterBody2D
 		base._Process(delta);
 		this.UpdateLastOnFloorPosition();
 		this.UpdateFacing();
+		this.UpdateContactTrackers(delta);
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -172,6 +176,13 @@ public partial class SuperconBody2D : CharacterBody2D
 		{
 			this.FacingDirection = Math.Sign(this.Velocity.X);
 		}
+	}
+
+	private void UpdateContactTrackers(double delta)
+	{
+		this.TimeOnFloor = this.IsOnFloor() ? this.TimeOnFloor + TimeSpan.FromSeconds(delta) : TimeSpan.Zero;
+		this.TimeOnCeiling = this.IsOnCeiling() ? this.TimeOnCeiling + TimeSpan.FromSeconds(delta) : TimeSpan.Zero;
+		this.TimeOnWall = this.IsOnWall() ? this.TimeOnWall + TimeSpan.FromSeconds(delta) : TimeSpan.Zero;
 	}
 
 	public void Accelerate(Vector2 targetVelocity, Vector2 acceleration)

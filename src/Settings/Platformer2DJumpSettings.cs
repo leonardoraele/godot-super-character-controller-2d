@@ -8,13 +8,13 @@ public partial class Platformer2DJumpSettings : Resource
 	/// <summary>
 	/// Determines the upmost height the character is able to reach, in pixels.
 	/// </summary>
-	[Export] public float JumpHeightPx { get; private set; } = 100;
+	[Export] public float JumpApexHeightPx { get; private set; } = 100;
 	/// <summary>
 	/// Determines the time it takes for the character to reach the jump's apex, in miliseconds. If IsCancelable is
 	/// true, the player can cancel the jump earlier by releasing the jump button. In this case, the character might not
 	/// reach this height.
 	/// </summary>
-	[Export] public float JumpDurationMs { get; private set; } = 500;
+	[Export] public float AscentDurationMs { get; private set; } = 500;
 	/// <summary>
 	/// By default, the controller uses a simple sine-based easing function to calculate the character's jump height
 	/// every frame and applying it to the JumpHeightPx property. Use this property to customize the jump height curve.
@@ -22,7 +22,7 @@ public partial class Platformer2DJumpSettings : Resource
 	/// values are relative to the JumpHeightPx property, while the curve's X axis values are relative to the
 	/// JumpDurationMs property.
 	/// </summary>
-	[Export] public Curve? JumpHeightCurve;
+	[Export] public Curve? AscentCurve;
 	/// <summary>
 	/// This is the maximum speed the character can reach while falling. i.e. the air resistance.
 	/// </summary>

@@ -21,21 +21,16 @@ public partial class HorizontalMovementController : StateController
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	[Export] public float MaxSpeedPxPSec { get; set; } = 600f;
-	[Export] public float AccelerationPxPSecSqr { get; set; } = 1200f;
+	[Export] public float MaxSpeedPxPSec = 600f;
+	[Export] public float AccelerationPxPSecSqr = 1200f;
 	/// <summary>
 	/// Deceleration when no input is given.
 	/// </summary>
-	[Export] public float SoftDecelerationPxPSecSqr { get; set; } = 1200f;
+	[Export] public float SoftDecelerationPxPSecSqr = 1200f;
 	/// <summary>
 	/// Deceleration when current input is lower than the current speed or opposite to current movement direction.
 	/// </summary>
-	[Export] public float HardDecelerationPxPSecSqr { get; set; } = 2400f;
-	/// <summary>
-	/// If true, this controller will also adjust the vertical velocity to follow slopes when on the ground. If false,
-	/// vertical velocity won't be modified.
-	/// </summary>
-	[Export] public bool FollowSlopes { get; set; } = true;
+	[Export] public float HardDecelerationPxPSecSqr = 2400f;
 
 	[ExportGroup("Options")]
 	/// <summary>
@@ -75,34 +70,14 @@ public partial class HorizontalMovementController : StateController
 	public override void _PhysicsProcessActive(double delta)
 	{
 		base._PhysicsProcessActive(delta);
-		this.CalculateHorizontalPhysics((float)delta);
-		this.CalculateVerticalPhysics();
-	}
-
-	private void CalculateHorizontalPhysics(float delta)
-	{
 		float targetVelocityX = this.MaxSpeedPxPSec * this.ResolvedInput.X;
-		float accelerationX =
+		double accelerationX =
 			Math.Abs(this.Character.Velocity.X) < float.Epsilon
 			|| Math.Abs(targetVelocityX) > Math.Abs(this.Character.Velocity.X)
 				&& Math.Sign(targetVelocityX) == Math.Sign(this.Character.Velocity.X)
 				? this.AccelerationPxPSecSqr * delta
 			: Math.Abs(this.ResolvedInput.X) < float.Epsilon ? this.SoftDecelerationPxPSecSqr * delta
 			: this.HardDecelerationPxPSecSqr * delta;
-		this.Character.AccelerateX(targetVelocityX, accelerationX);
-	}
-
-	private void CalculateVerticalPhysics()
-	{
-		if (this.FollowSlopes)
-		{
-			if (this.Character.IsOnSlope)
-			{
-				this.Character.Velocity = (Vector2.Right * this.Character.Velocity).Rotated(this.Character.GetFloorAngle());
-				// this.Character.VelocityY = this.Character.MovementSettings.DownwardVelocityOnFloor;
-			} else if (this.Character.IsOnFloor()) {
-				this.Character.VelocityY = 0;
-			}
-		}
+		this.Character.AccelerateX(targetVelocityX, (float) accelerationX);
 	}
 }
