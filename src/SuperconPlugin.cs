@@ -20,6 +20,7 @@ public partial class SuperconPlugin : EditorPlugin
 		this.AddCustomType(nameof(HorizontalMovementController), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateControllers)}/{nameof(HorizontalMovementController)}.cs"), null);
 		this.AddCustomType(nameof(GravityController), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateControllers)}/{nameof(GravityController)}.cs"), null);
 		this.AddCustomType(nameof(InputActionTransition), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateControllers)}/{nameof(InputActionTransition)}.cs"), null);
+		this.AddCustomType(nameof(ConditionalStateTransition), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateControllers)}/{nameof(ConditionalStateTransition)}.cs"), null);
 	}
 
 	public override void _ExitTree()
@@ -32,6 +33,7 @@ public partial class SuperconPlugin : EditorPlugin
 		this.RemoveCustomType(nameof(HorizontalMovementController));
 		this.RemoveCustomType(nameof(GravityController));
 		this.RemoveCustomType(nameof(InputActionTransition));
+		this.RemoveCustomType(nameof(ConditionalStateTransition));
 	}
 }
 #endif

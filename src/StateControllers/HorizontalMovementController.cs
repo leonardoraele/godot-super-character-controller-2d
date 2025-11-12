@@ -11,9 +11,10 @@ public partial class HorizontalMovementController : StateController
 
 	public enum AutomaticMovementDirection : byte
 	{
-		None = 0,
+		Manual = 0,
 		Left = 1,
-		Right = 2
+		Right = 2,
+		Idle = 3,
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -46,7 +47,7 @@ public partial class HorizontalMovementController : StateController
 	/// If either direction is set, the character will move automatically to that direction as if the player was
 	/// constantly inputting the directional movement to that direction. Actual player input is ignored in this case.
 	/// </summary>
-	[Export] public AutomaticMovementDirection AutomaticMovement = AutomaticMovementDirection.None;
+	[Export] public AutomaticMovementDirection AutomaticMovement = AutomaticMovementDirection.Manual;
 	/// <summary>
 	/// If true, inverts the direction of movement.
 	/// (useful to implement things like status effects that reverse controls)
@@ -60,9 +61,10 @@ public partial class HorizontalMovementController : StateController
 	private Vector2 ResolvedInput
 		=> this.AutomaticMovement switch
 			{
+				AutomaticMovementDirection.Manual => this.Character.InputManager.MovementInput,
 				AutomaticMovementDirection.Left => Vector2.Left,
 				AutomaticMovementDirection.Right => Vector2.Right,
-				_ => this.Character.InputManager.MovementInput
+				_ => Vector2.Zero,
 			}
 			* (this.InvertDirections ? -1 : 1);
 

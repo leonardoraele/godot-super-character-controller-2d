@@ -10,9 +10,9 @@ public partial class SuperconBody2D : CharacterBody2D
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	[Obsolete][Export] public Platformer2DInputSettings InputSettings = null!; // TODO
-	[Obsolete][Export] public Platformer2DMovementSettings MovementSettings = null!; // TODO
-	[Obsolete][Export] public Platformer2DJumpSettings JumpSettings = null!; // TODO
+	[Obsolete][Export] public Platformer2DInputSettings? InputSettings; // TODO
+	[Obsolete][Export] public Platformer2DMovementSettings? MovementSettings; // TODO
+	[Obsolete][Export] public Platformer2DJumpSettings? JumpSettings; // TODO
 	[Obsolete][Export] public Platformer2DDashSettings? DashSettings; // TODO
 	[Obsolete][Export] public Platformer2DWallMotionSettings? WallMotionSettings; // TODO
 

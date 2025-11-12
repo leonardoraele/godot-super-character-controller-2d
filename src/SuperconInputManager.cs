@@ -42,23 +42,7 @@ public partial class SuperconInputManager : Node
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	[Export]
-	public bool Enabled
-	{
-		get;
-		set
-		{
-			if (!value)
-			{
-				this.MovementInput = Vector2.Zero;
-				foreach (InputBuffer buffer in this.InputBuffers.Values)
-				{
-					buffer.ConsumeInput();
-				}
-			}
-			field = value;
-		}
-	} = true;
+	[Export] public bool Enabled { get; private set; } = true;
 
 	[ExportGroup("Movement InputAction Names")]
 	[Export] public string MoveLeftAction = "character_left";
@@ -116,5 +100,19 @@ public partial class SuperconInputManager : Node
 			};
 		}
 		return this.InputBuffers[name];
+	}
+
+	public bool SetEnabled(bool enabled)
+	{
+		this.Enabled = enabled;
+		if (!enabled)
+		{
+			this.MovementInput = Vector2.Zero;
+			foreach (InputBuffer buffer in this.InputBuffers.Values)
+			{
+				buffer.ConsumeInput();
+			}
+		}
+		return this.Enabled;
 	}
 }
