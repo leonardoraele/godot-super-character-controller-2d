@@ -6,6 +6,13 @@ namespace Raele.Supercon2D;
 public partial class SuperconState : Raele.GodotUtils.StateMachine.BaseState
 {
 	// -----------------------------------------------------------------------------------------------------------------
+	// EXPORTS
+	// -----------------------------------------------------------------------------------------------------------------
+
+	[ExportGroup("Options")]
+	[Export(PropertyHint.Flags, "X:1,Y:2")] public byte ResetVelocityOnEnter = 0;
+
+	// -----------------------------------------------------------------------------------------------------------------
 	// FIELDS
 	// -----------------------------------------------------------------------------------------------------------------
 
@@ -20,6 +27,19 @@ public partial class SuperconState : Raele.GodotUtils.StateMachine.BaseState
 	// -----------------------------------------------------------------------------------------------------------------
 	// GODOT EVENTS
 	// -----------------------------------------------------------------------------------------------------------------
+
+	public override void _EnterState()
+	{
+		base._EnterState();
+		if ((this.ResetVelocityOnEnter & 1) != 0)
+		{
+			this.Character.VelocityX = 0;
+		}
+		if ((this.ResetVelocityOnEnter & 2) != 0)
+		{
+			this.Character.VelocityY = 0;
+		}
+	}
 
 	public override void _PhysicsProcess(double delta)
 	{
