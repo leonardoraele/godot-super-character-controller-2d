@@ -16,7 +16,7 @@ public partial class GravityComponent : SuperconStateController
 	/// This is the downward velocity applied to the character when it is on the floor. It can be used to ensure the
 	/// character stays grounded on fast slopes or moving platforms.
 	/// </summary>
-	[Export] public float OnFloorDownwardVelocityPxPSec = 0f;
+	[Export] public float DownwardVelocityOnFloorPxPSec = 0f;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// PUBLIC METHODS
@@ -35,7 +35,7 @@ public partial class GravityComponent : SuperconStateController
 			}
 			else
 			{
-				this.Character.VelocityY = this.OnFloorDownwardVelocityPxPSec;
+				this.Character.VelocityY = this.DownwardVelocityOnFloorPxPSec;
 			}
 		}
 		else
