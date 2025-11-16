@@ -7,21 +7,37 @@ namespace Raele.Supercon2D.StateTransitions;
 public partial class ConditionalStateTransition : SuperconStateController
 {
 	// -----------------------------------------------------------------------------------------------------------------
+	// LOCAL TYPES
+	// -----------------------------------------------------------------------------------------------------------------
+
+	public enum SelfOption
+	{
+		Character,
+		StateMachine,
+		State,
+		ThisNode,
+		TreeRoot,
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	/// <summary>
-	/// This value will be available in the expression's context as the 'context' variable.
-	/// </summary>
-	[Export] public Variant Context = new Variant();
 	[Export(PropertyHint.MultilineText)] public string Expression = "";
 	[Export] public SuperconState? TransitionOnTrue;
 
-	[ExportGroup("Options")]
+	[ExportGroup("Evaluation Options")]
+	[Export] public SelfOption Self = SelfOption.Character;
+	/// <summary>
+	/// This value will be available in the expression's context as the 'context' variable.
+	/// </summary>
+	[Export] public Variant ContextVar = new Variant();
+
+	[ExportGroup("More Options")]
 	/// <summary>
 	/// Minimum duration, in milliseconds, that the condition must be true before the transition is triggered.
 	/// </summary>
-	[Export] public float MinDurationMs = 0f;
+	[Export] public uint MinDurationMs = 0;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// FIELDS
@@ -29,6 +45,15 @@ public partial class ConditionalStateTransition : SuperconStateController
 
 	private float ConditionSatisfiedMoment = float.PositiveInfinity;
 	private Expression CompiledExpression = new();
+	private GodotObject ResolvedSelf => this.Self switch
+	{
+		SelfOption.Character => this.Character,
+		SelfOption.StateMachine => this.StateMachine,
+		SelfOption.State => this.State,
+		SelfOption.ThisNode => this,
+		SelfOption.TreeRoot => this.GetTree().Root,
+		_ => this,
+	};
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// OVERRIDES
@@ -85,7 +110,14 @@ public partial class ConditionalStateTransition : SuperconStateController
 
 	private bool TestExpression()
 	{
-		Variant result = this.CompiledExpression.Execute([this.Context]);
+		Variant result;
+		try
+		{
+			result = this.CompiledExpression.Execute([this.ContextVar], this.ResolvedSelf);
+		} catch
+		{
+			result = new Variant();
+		}
 		if (this.CompiledExpression.HasExecuteFailed())
 		{
 			GD.PrintErr($"[{this.GetType().FullName}] Failed to execute expression '{this.Expression}': {this.CompiledExpression.GetErrorText()}");

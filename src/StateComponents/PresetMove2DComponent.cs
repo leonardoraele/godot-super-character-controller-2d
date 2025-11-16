@@ -3,13 +3,13 @@ using Godot;
 
 namespace Raele.Supercon2D.StateComponents;
 
-public partial class StraightMoveComponent : SuperconStateController
+public partial class PresetMove2DComponent : SuperconStateController
 {
 	// -----------------------------------------------------------------------------------------------------------------
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	[Export] public Vector2 Direction = Vector2.Zero;
+	[Export] public Vector2 Direction = Vector2.Down;
 
 	/// <summary>
 	/// If true, the direction is mirrored horizontally when the character is facing left.
@@ -48,6 +48,7 @@ public partial class StraightMoveComponent : SuperconStateController
 	// -----------------------------------------------------------------------------------------------------------------
 
 	public TimeSpan Duration => TimeSpan.FromMilliseconds(this.DurationMs);
+	public Vector2 ResolvedDirection => this.Direction * (this.UseFacing ? new Vector2(this.Character.FacingDirection, 1) : Vector2.One);
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// METHODS
@@ -80,7 +81,6 @@ public partial class StraightMoveComponent : SuperconStateController
 		double prevFrameDistanceProgress = this.Curve?.Sample((float) prevFrameDurationProgress)
 			?? Math.Sin(prevFrameDurationProgress * Math.PI / 2);
 		double distanceDiffPx = this.DistancePx * (thisFrameDistanceProgress - prevFrameDistanceProgress);
-		this.Character.Velocity = this.Direction * (float) (distanceDiffPx / delta)
-			+ this.Character.Velocity * this.Direction.Rotated(-0.5f);
+		this.Character.Velocity = this.ResolvedDirection * (float) (distanceDiffPx / delta);
 	}
 }

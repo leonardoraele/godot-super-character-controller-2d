@@ -21,7 +21,7 @@ public partial class SuperconPlugin : EditorPlugin
 		// State Controllers
 		this.AddCustomType(nameof(ForceComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(ForceComponent)}.cs"), null);
 		this.AddCustomType(nameof(ImpulseComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(ImpulseComponent)}.cs"), null);
-		this.AddCustomType(nameof(StraightMoveComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(StraightMoveComponent)}.cs"), null);
+		this.AddCustomType(nameof(PresetMove1DComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(PresetMove1DComponent)}.cs"), null);
 		this.AddCustomType(nameof(PlayerControl1DComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(PlayerControl1DComponent)}.cs"), null);
 		this.AddCustomType(nameof(PlayerControl2DComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(PlayerControl2DComponent)}.cs"), null);
 		this.AddCustomType(nameof(SlopeBehaviorComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(SlopeBehaviorComponent)}.cs"), null);
@@ -40,7 +40,7 @@ public partial class SuperconPlugin : EditorPlugin
 
 		this.RemoveCustomType(nameof(ForceComponent));
 		this.RemoveCustomType(nameof(ImpulseComponent));
-		this.RemoveCustomType(nameof(StraightMoveComponent));
+		this.RemoveCustomType(nameof(PresetMove1DComponent));
 		this.RemoveCustomType(nameof(PlayerControl1DComponent));
 		this.RemoveCustomType(nameof(PlayerControl2DComponent));
 		this.RemoveCustomType(nameof(SlopeBehaviorComponent));

@@ -20,8 +20,8 @@ public partial class ForceComponent : SuperconStateController
 	// -----------------------------------------------------------------------------------------------------------------
 
 	[Export] public Vector2 Direction = Vector2.Down;
-	[Export] public float AccelerationPxPSecSqr = 50f;
-	[Export] public float MaxSpeedPxPSec = float.PositiveInfinity;
+	[Export] public float AccelerationPxPSecSqr = 600f;
+	[Export] public float MaxSpeedPxPSec = 600f;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// LIFECYCLE METHODS
