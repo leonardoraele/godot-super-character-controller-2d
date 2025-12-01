@@ -4,17 +4,12 @@ using System;
 
 namespace Raele.Supercon2D;
 
+[Tool]
 public partial class SuperconBody2D : CharacterBody2D
 {
 	// -----------------------------------------------------------------------------------------------------------------
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------
-
-	[Obsolete][Export] public Platformer2DInputSettings? InputSettings; // TODO
-	[Obsolete][Export] public Platformer2DMovementSettings? MovementSettings; // TODO
-	[Obsolete][Export] public Platformer2DJumpSettings? JumpSettings; // TODO
-	[Obsolete][Export] public Platformer2DDashSettings? DashSettings; // TODO
-	[Obsolete][Export] public Platformer2DWallMotionSettings? WallMotionSettings; // TODO
 
 	// /// <summary>
 	// /// If true, the character will rotate to face the direction of movement.
@@ -143,16 +138,17 @@ public partial class SuperconBody2D : CharacterBody2D
 	// GODOT EVENTS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	public override void _Ready()
-	{
-		base._Ready();
-		this.InputSettings ??= new Platformer2DInputSettings();
-		this.MovementSettings ??= new Platformer2DMovementSettings();
-		this.JumpSettings ??= new Platformer2DJumpSettings();
-	}
+	// public override void _Ready()
+	// {
+	// 	base._Ready();
+	// }
 
 	public override void _Process(double delta)
 	{
+		if (Engine.IsEditorHint())
+		{
+			return;
+		}
 		base._Process(delta);
 		this.UpdateLastOnFloorPosition();
 		this.UpdateFacing();
@@ -190,11 +186,23 @@ public partial class SuperconBody2D : CharacterBody2D
 		this.TimeOnWall = this.IsOnWall() ? this.TimeOnWall + TimeSpan.FromSeconds(delta) : TimeSpan.Zero;
 	}
 
-	public void Accelerate(Vector2 targetVelocity, Vector2 acceleration)
-		=> this.Velocity = GeneralUtil.MoveToward(this.Velocity, targetVelocity, acceleration);
+	public void ApplyForce(Vector2 forcePxPSec) => this.Velocity += forcePxPSec;
+	public void ApplyForce(Vector2 forcePxPSec, float maxSpeedPxPSec)
+		=> this.Velocity = (this.Velocity + forcePxPSec).Normalized()
+			* Mathf.Clamp((this.Velocity + forcePxPSec).Length(), maxSpeedPxPSec * -1, maxSpeedPxPSec);
 
-	public void Accelerate(Vector2 targetVelocity, float acceleration)
-		=> this.Velocity = GeneralUtil.MoveToward(this.Velocity, targetVelocity, new Vector2(acceleration, acceleration));
+	// public void Accelerate(Vector2 targetVelocity, float acceleration)
+	// 	=> new Vector2(
+	// 		Mathf.MoveToward(this.Velocity.X, targetVelocity.X, (float) Math.Abs(acceleration * Math.Cos(Math.Atan2(targetVelocity.Y, targetVelocity.X)))),
+	// 		Mathf.MoveToward(this.Velocity.Y, targetVelocity.Y, (float) Math.Abs(acceleration * Math.Sin(Math.Atan2(targetVelocity.Y, targetVelocity.X))))
+	// 	);
+
+	public void AccelerateArc(Vector2 targetVelocity, float angularRotationRad, float linearAccelerationPxPSec)
+		=> this.Velocity =
+			Vector2.Right.Rotated(
+				Mathf.MoveToward(targetVelocity.Angle(), this.Velocity.Angle(), angularRotationRad)
+			)
+			* Mathf.MoveToward(targetVelocity.Length(), this.Velocity.Length(), linearAccelerationPxPSec);
 
 	/// <summary>
 	/// Accelerates the character toward the given target velocity. The acceleration is applied to each axis.
@@ -208,17 +216,11 @@ public partial class SuperconBody2D : CharacterBody2D
 	/// This method only changes the character's Velocity. You still have to call <code>MoveAndSlide</code> or similar
 	/// to actually move the character.
 	/// </summary>
-	public void Accelerate(float targetVelocityX, float targetVelocityY, float accelerationX, float accelerationY)
-	{
-		this.Velocity = GeneralUtil.MoveToward(
-			this.Velocity.X,
-			this.Velocity.Y,
-			targetVelocityX,
-			targetVelocityY,
-			accelerationX,
-			accelerationY
+	public void AccelerateXY(float targetVelocityX, float targetVelocityY, float accelerationX, float accelerationY)
+		=> this.Velocity = new Vector2(
+			Mathf.MoveToward(this.Velocity.X, targetVelocityX, accelerationX),
+			Mathf.MoveToward(this.Velocity.Y, targetVelocityY, accelerationY)
 		);
-	}
 
 	/// <summary>
 	/// Same as <code>Accelerate</code> but only applies acceleration to the X axis.

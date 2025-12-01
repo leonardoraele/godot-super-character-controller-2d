@@ -1,0 +1,41 @@
+using Godot;
+
+namespace Raele.Supercon2D.StateComponents;
+
+[Tool]
+public partial class GravityComponent : SuperconStateController
+{
+	// -----------------------------------------------------------------------------------------------------------------
+	// EXPORTS
+	// -----------------------------------------------------------------------------------------------------------------
+
+	[Export] public float MaxFallSpeedPxPSec = 600f;
+	[Export] public float GravityMultiplier = 1f;
+
+	// -----------------------------------------------------------------------------------------------------------------
+	// FIELDS
+	// -----------------------------------------------------------------------------------------------------------------
+
+	public Vector2 GravityDirection;
+	public float GravityMagnitudePxPSecSq;
+
+	// -----------------------------------------------------------------------------------------------------------------
+	// LIFECYCLE METHODS
+	// -----------------------------------------------------------------------------------------------------------------
+
+	public override void _Ready()
+	{
+		base._Ready();
+		this.GravityDirection = ProjectSettings.GetSetting("physics/2d/default_gravity_vector").AsVector2().Normalized();
+		this.GravityMagnitudePxPSecSq = ProjectSettings.GetSetting("physics/2d/default_gravity").AsSingle();
+	}
+
+	public override void _PhysicsProcessActive(double delta)
+	{
+		base._PhysicsProcessActive(delta);
+		this.Character.ApplyForce(
+			this.GravityDirection * this.GravityMagnitudePxPSecSq * this.GravityMultiplier * (float) delta,
+			this.MaxFallSpeedPxPSec
+		);
+	}
+}

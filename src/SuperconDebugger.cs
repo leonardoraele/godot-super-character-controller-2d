@@ -21,7 +21,7 @@ public partial class SuperconDebugger : Control
     {
 		float defaultSpeedBarLength = 16;
 		float characterSpeed = this.Character.Velocity.Length();
-		float characterMaxSpeed = this.Character.MovementSettings.MaxHorizontalSpeedPxPSec;
+		float characterMaxSpeed = 0f; // TODO // FIXME this.Character.MovementSettings.MaxHorizontalSpeedPxPSec;
 		float totalSpeedBarLength = defaultSpeedBarLength * (characterSpeed / characterMaxSpeed);
 		float cappedSpeedBarLength = Math.Min(defaultSpeedBarLength, totalSpeedBarLength);
 		this.DrawLine(Vector2.Zero, this.Character.Velocity.Normalized() * defaultSpeedBarLength, Colors.Gray, -1, true);

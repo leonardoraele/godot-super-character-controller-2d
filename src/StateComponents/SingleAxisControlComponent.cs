@@ -3,7 +3,7 @@ using Godot;
 
 namespace Raele.Supercon2D.StateComponents;
 
-public partial class AxisControlComponent : SuperconStateController
+public partial class SingleAxisControlComponent : SuperconStateController
 {
 	// -----------------------------------------------------------------------------------------------------------------
 	// LOCAL TYPES
@@ -24,7 +24,7 @@ public partial class AxisControlComponent : SuperconStateController
 	[Export] public float AccelerationPxPSecSqr = 400f;
 	[Export] public float SoftDecelerationPxPSecSqr = 400f;
 	[Export] public float HardDecelerationPxPSecSqr = 1000f;
-	[Export] public float DampingPxPSecSqr = 0f;
+	// [Export] public float DampingPxPSecSqr = 0f;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// LIFECYCLE METHODS

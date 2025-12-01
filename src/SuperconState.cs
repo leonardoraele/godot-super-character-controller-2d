@@ -17,7 +17,7 @@ public partial class SuperconState : GodotUtils.StateMachine.BaseState
 	// FIELDS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	public SuperconBody2D Character => field != null ? field : field = this.RequireAncestor<SuperconBody2D>();
+	public SuperconBody2D Character => field ??= this.RequireAncestor<SuperconBody2D>();
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// PROPERTIES

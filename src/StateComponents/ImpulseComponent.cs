@@ -17,7 +17,7 @@ public partial class ImpulseComponent : SuperconStateController
 
 	public enum ImpulseTypeEnum : byte
 	{
-		Additive,
+		Add,
 		Override,
 	}
 
@@ -28,13 +28,13 @@ public partial class ImpulseComponent : SuperconStateController
 	/// <summary>
 	/// Determines how the impulse is applied to the character's velocity.
 	/// </summary>
-	[Export] public ImpulseTypeEnum ImpulseType = ImpulseTypeEnum.Additive;
+	[Export] public ImpulseTypeEnum ImpulseType = ImpulseTypeEnum.Add;
 
 	/// <summary>
 	/// The direction of the impulse to be applied to the character's velocity, counter clockwise relative to the
 	/// positive right axis.
 	/// </summary>
-	[Export] public float AngleDeg = 0f;
+	[Export(PropertyHint.Range, "-180,180,5,radians_as_degrees")] public float Angle = 0f;
 
 	/// <summary>
 	/// If true, the impulse direction is inverted when the character is facing left.
@@ -50,8 +50,8 @@ public partial class ImpulseComponent : SuperconStateController
 	// PROPERTIES
 	// -----------------------------------------------------------------------------------------------------------------
 
-	private Vector2 ImpulseDirection => Vector2.Right.Rotated(Mathf.DegToRad(this.AngleDeg))
-		* new Vector2(this.UseFacingDirection ? this.Character.FacingDirection : 1, 1);
+	private Vector2 ImpulseDirection => Vector2.Right.Rotated(this.Angle)
+		* Vector2.Right * (this.UseFacingDirection ? this.Character.FacingDirection : 1);
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// METHODS
@@ -60,7 +60,7 @@ public partial class ImpulseComponent : SuperconStateController
 	public override void _EnterState()
 	{
 		base._EnterState();
-		this.Character.Velocity = this.Character.Velocity * (this.ImpulseType == ImpulseTypeEnum.Additive ? 1 : 0)
+		this.Character.Velocity = this.Character.Velocity * (this.ImpulseType == ImpulseTypeEnum.Add ? 1 : 0)
 			+ this.ImpulseDirection * this.MagnitudePxPSec;
 	}
 }

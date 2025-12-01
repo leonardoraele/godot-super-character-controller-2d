@@ -1,5 +1,6 @@
 using System.Linq;
 using Godot;
+using Godot.Collections;
 
 namespace Raele.Supercon2D.StateComponents;
 
@@ -12,18 +13,34 @@ public partial class AnimationComponent : SuperconStateController
 
 	// public static readonly string MyConstant = "";
 
+	public enum FlipHEnum
+	{
+		Never,
+		Always,
+		IfFacingLeft,
+	}
+
 	// -----------------------------------------------------------------------------------------------------------------
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	[Export] public AnimatedSprite2D? AnimatedSprite;
-	[Export(PropertyHint.EnumSuggestion)] public string Animation = "";
+	[Export] public AnimatedSprite2D? AnimatedSprite
+		{ get => field; set { field = value; this.NotifyPropertyListChanged(); }} = null;
+	[Export(PropertyHint.Enum)] public string Animation = "";
+	[Export] public FlipHEnum FlipH = FlipHEnum.IfFacingLeft;
+	[Export(PropertyHint.Range, "0.25,4,0.05,or_greater,or_less")] public float AnimationSpeedScale = 1f;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// FIELDS
 	// -----------------------------------------------------------------------------------------------------------------
 
-
+	public bool ShouldFlipH => this.FlipH switch
+	{
+		FlipHEnum.Never => false,
+		FlipHEnum.Always => true,
+		FlipHEnum.IfFacingLeft => this.Character.FacingDirection < 0,
+		_ => false,
+	};
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// PROPERTIES
@@ -86,9 +103,9 @@ public partial class AnimationComponent : SuperconStateController
 	public override void _ValidateProperty(Godot.Collections.Dictionary property)
 	{
 		base._ValidateProperty(property);
-		if (property["name"].Equals(nameof(this.Animation)))
+		if (property["name"].AsString() == nameof(this.Animation))
 		{
-			property["hint_string"] = string.Join(",", this.AnimatedSprite?.SpriteFrames?.GetAnimationNames() ?? []);
+			property["hint_string"] = this.AnimatedSprite?.SpriteFrames?.GetAnimationNames().Join(",") ?? "";
 		}
 	}
 
@@ -99,6 +116,16 @@ public partial class AnimationComponent : SuperconStateController
 	public override void _EnterState()
 	{
 		base._EnterState();
-		this.AnimatedSprite?.Animation = this.Animation;
+		this.AnimatedSprite?.Play(this.Animation);
+		this.AnimatedSprite?.FlipH = this.ShouldFlipH;
+	}
+
+	public override void _ProcessActive(double delta)
+	{
+		base._ProcessActive(delta);
+		if (this.FlipH == FlipHEnum.IfFacingLeft)
+		{
+			this.AnimatedSprite?.FlipH = this.ShouldFlipH;
+		}
 	}
 }

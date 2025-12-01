@@ -3,7 +3,7 @@ using Godot;
 
 namespace Raele.Supercon2D.StateComponents;
 
-public partial class SmoothSlopeComponent : SuperconStateController
+public partial class SlopeComponent : SuperconStateController
 {
 	// -----------------------------------------------------------------------------------------------------------------
 	// EXPORTS
