@@ -68,13 +68,13 @@ public partial class SingleAxisControlComponent : SuperconStateController
 		base._PhysicsProcessActive(delta);
 		float targetVelocity = this.AxisInput * this.MaxSpeedPxPSec;
 		float acceleration =
-			Math.Abs(targetVelocity) < float.Epsilon ? this.SoftDecelerationPxPSecSqr
+			Math.Abs(targetVelocity) < Mathf.Epsilon ? this.SoftDecelerationPxPSecSqr
 			: this.AxisVelocity > 0 && targetVelocity < this.AxisVelocity
 			|| this.AxisVelocity < 0 && targetVelocity > this.AxisVelocity
 				? this.HardDecelerationPxPSecSqr
 			: this.AccelerationPxPSecSqr;
 		this.AccelerateAxis(targetVelocity, acceleration, (float) delta);
-		// if (Math.Abs(targetVelocity) < float.Epsilon)
+		// if (Math.Abs(targetVelocity) < Mathf.Epsilon)
 		// {
 		// 	this.Character.AxisVelocity *= this.DampMultiplierPFrame;
 		// }

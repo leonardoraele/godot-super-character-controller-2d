@@ -114,7 +114,7 @@ public partial class SuperconBody2D : CharacterBody2D
 	public bool IsFacingLeft => this.FacingDirection < 0;
 	public bool IsFacingRight => this.FacingDirection > 0;
 	public bool IsFacingNeutral => this.FacingDirection == 0;
-	public bool IsOnSlope => this.IsOnFloor() && this.GetFloorAngle() > 0f;
+	public bool IsOnSlope => this.IsOnFloor() && Math.Abs(this.GetFloorNormal().AngleTo(Vector2.Up)) > Mathf.Epsilon;
 
 	/// <summary>
 	/// Determines the direction the character is facing. Any value lower than 0 means the character is facing left,
