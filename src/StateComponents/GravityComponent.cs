@@ -34,7 +34,7 @@ public partial class GravityComponent : SuperconStateController
 	{
 		base._PhysicsProcessActive(delta);
 		this.Character.ApplyForce(
-			this.GravityDirection * this.GravityMagnitudePxPSecSq * this.GravityMultiplier * (float) delta,
+			this.GravityDirection * this.GravityMagnitudePxPSecSq * (float) delta * this.GravityMultiplier,
 			this.MaxFallSpeedPxPSec
 		);
 	}

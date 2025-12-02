@@ -188,8 +188,17 @@ public partial class SuperconBody2D : CharacterBody2D
 
 	public void ApplyForce(Vector2 forcePxPSec) => this.Velocity += forcePxPSec;
 	public void ApplyForce(Vector2 forcePxPSec, float maxSpeedPxPSec)
-		=> this.Velocity = (this.Velocity + forcePxPSec).Normalized()
-			* Mathf.Clamp((this.Velocity + forcePxPSec).Length(), maxSpeedPxPSec * -1, maxSpeedPxPSec);
+	{
+		Vector2 addedVelocity = this.Velocity + forcePxPSec;
+		Vector2 forceParallelVelocity = new Vector2(
+			addedVelocity.X * (float) Math.Cos(Math.Atan2(forcePxPSec.Y, forcePxPSec.X)),
+			addedVelocity.Y * (float) Math.Sin(Math.Atan2(forcePxPSec.Y, forcePxPSec.X))
+		);
+		Vector2 forceOrthogonalVelocity = addedVelocity - forceParallelVelocity;
+		this.Velocity = forceParallelVelocity.Normalized()
+			* Math.Min(forceParallelVelocity.Length(), maxSpeedPxPSec)
+			+ forceOrthogonalVelocity;
+	}
 
 	// public void Accelerate(Vector2 targetVelocity, float acceleration)
 	// 	=> new Vector2(
