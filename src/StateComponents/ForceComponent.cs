@@ -65,15 +65,6 @@ public partial class ForceComponent : SuperconStateController
 					this.ForceDirection * this.AccelerationPxPSecSq * (float) delta,
 					this.MaxSpeedPxPSec
 				);
-				GD.PrintS(new
-				{
-					this.Character.Velocity,
-					Force = this.ForceDirection * this.AccelerationPxPSecSq * (float) delta,
-					this.MaxSpeedPxPSec,
-					GetLastMotion = this.Character.GetLastMotion(),
-					GetPositionDelta = this.Character.GetPositionDelta(),
-					GetRealVelocity = this.Character.GetRealVelocity(),
-				});
 				break;
 		}
 	}
