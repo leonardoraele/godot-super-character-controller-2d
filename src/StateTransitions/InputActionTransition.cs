@@ -50,12 +50,12 @@ public partial class InputActionTransition : SuperconStateController
 	/// after the corresponding this.State has been active for at least this amount of time. Activation attempts prior
 	/// to then are ignored.
 	/// </summary>
-	[Export] public float EnabledFromTimeSec = 0f;
+	[Export] public float EnabledFromTimeMs = 0f;
 	/// <summary>
 	/// Time in seconds from the start of the this.State to disable this ability. This ability can no longer be triggered
 	/// after the corresponding this.State has been active for this amount of time.
 	/// </summary>
-	[Export] public float DisabledAfterTimeSec = float.PositiveInfinity;
+	[Export] public float DisabledAfterTimeMs = float.PositiveInfinity;
 	/// <summary>
 	/// If set, this ability can only be activated if the previous active this.State was the one specified here.
 	/// </summary>
@@ -140,8 +140,8 @@ public partial class InputActionTransition : SuperconStateController
 	private bool CheckTransitionConditions(double delta)
 		=> this.State.IsActive
 			&& this.Ability?.IsAvailable != false
-			&& this.State.ActiveDuration.TotalMilliseconds >= this.EnabledFromTimeSec * 1000
-			&& this.State.ActiveDuration.TotalMilliseconds < this.DisabledAfterTimeSec * 1000
+			&& this.State.ActiveDuration.TotalMilliseconds >= this.EnabledFromTimeMs
+			&& this.State.ActiveDuration.TotalMilliseconds < this.DisabledAfterTimeMs
 			&& (
 				this.PreviousState == null
 				|| this.StateMachine.PreviousState == this.PreviousState

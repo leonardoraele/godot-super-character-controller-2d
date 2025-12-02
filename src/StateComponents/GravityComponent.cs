@@ -9,8 +9,8 @@ public partial class GravityComponent : SuperconStateController
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	[Export] public float MaxFallSpeedPxPSec = 600f;
-	[Export] public float GravityMultiplier = 1f;
+	[Export] public float MaxFallSpeedPxPSec = float.PositiveInfinity;
+	[Export] public float GravityMultiplier = 5f;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// FIELDS

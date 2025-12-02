@@ -24,8 +24,8 @@ public partial class ForceComponent : SuperconStateController
 	[Export] public ForceTypeEnum ForceType
 		{ get => field; set { field = value; this.NotifyPropertyListChanged(); } } = ForceTypeEnum.FixedDirection;
 	[Export] public Vector2 Direction = Vector2.Zero;
-	[Export] public float AccelerationPxPSecSq = 600f;
-	[Export] public float MaxSpeedPxPSec = 600f;
+	[Export] public float AccelerationPxPSecSq = 500f;
+	[Export] public float MaxSpeedPxPSec = float.PositiveInfinity;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// EXPORTS
@@ -56,8 +56,8 @@ public partial class ForceComponent : SuperconStateController
 				break;
 			default:
 				this.Character.ApplyForce(
-					this.ForceDirection * this.MaxSpeedPxPSec,
-					this.AccelerationPxPSecSq * (float) delta
+					this.ForceDirection * this.AccelerationPxPSecSq * (float) delta,
+					this.MaxSpeedPxPSec
 				);
 				break;
 		}

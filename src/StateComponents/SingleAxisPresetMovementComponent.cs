@@ -21,7 +21,7 @@ public partial class SingleAxisPresetMovementComponent : SuperconStateController
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	[Export] public DirectionOptions Direction = DirectionOptions.Down;
+	[Export] public DirectionOptions Direction = DirectionOptions.Up;
 
 	/// <summary>
 	/// If true, the direction is mirrored horizontally when the character is facing left.
@@ -100,11 +100,9 @@ public partial class SingleAxisPresetMovementComponent : SuperconStateController
 		base._PhysicsProcessActive(delta);
 		// TODO We could precalculate the jump height curve so that we don't need to read the curve twice every frame.
 		double thisFrameDurationProgress = this.State.ActiveDuration.TotalMilliseconds / this.DurationMs;
-		double thisFrameDistanceProgress = this.Curve?.Sample((float) thisFrameDurationProgress)
-			?? Math.Sin(thisFrameDurationProgress * Math.PI / 2);
+		double thisFrameDistanceProgress = this.Curve?.Sample((float) thisFrameDurationProgress) ?? thisFrameDurationProgress;
 		double prevFrameDurationProgress = Math.Max(0, (this.State.ActiveDuration.TotalMilliseconds - delta * 1000) / this.DurationMs);
-		double prevFrameDistanceProgress = this.Curve?.Sample((float) prevFrameDurationProgress)
-			?? Math.Sin(prevFrameDurationProgress * Math.PI / 2);
+		double prevFrameDistanceProgress = this.Curve?.Sample((float) prevFrameDurationProgress) ?? prevFrameDurationProgress;
 		double distanceDiffPx = this.DistancePx * (thisFrameDistanceProgress - prevFrameDistanceProgress);
 		this.Character.Velocity = this.ResolvedDirection * (float) (distanceDiffPx / delta)
 			+ this.Character.Velocity * this.ResolvedCrossDirection;

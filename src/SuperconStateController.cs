@@ -32,8 +32,8 @@ public partial class SuperconStateController : Node
 			return;
 		}
 		base._EnterTree();
-		this.State.StateEntered += this._EnterState;
-		this.State.StateExited += this._ExitState;
+		this.State.StateEntered += this.OnEnterState;
+		this.State.StateExited += this.OnExitState;
 	}
 
 	public override void _Process(double delta)
@@ -65,6 +65,22 @@ public partial class SuperconStateController : Node
 	// -----------------------------------------------------------------------------------------------------------------
 	// VIRTUAL METHODS
 	// -----------------------------------------------------------------------------------------------------------------
+
+	private void OnEnterState()
+	{
+		if (this.Enabled)
+		{
+			this._EnterState();
+		}
+	}
+
+	private void OnExitState()
+	{
+		if (this.Enabled)
+		{
+			this._ExitState();
+		}
+	}
 
 	public virtual void _EnterState() { }
 	public virtual void _ExitState() { }
