@@ -4,6 +4,7 @@ using Godot;
 
 namespace Raele.Supercon2D;
 
+[Tool]
 public partial class SuperconInputMapping : Resource
 {
 	// -----------------------------------------------------------------------------------------------------------------
@@ -65,7 +66,7 @@ public partial class SuperconInputMapping : Resource
 
 	public void Update()
 	{
-		if (!this.Enabled)
+		if (!this.Enabled || Engine.IsEditorHint())
 		{
 			return;
 		}

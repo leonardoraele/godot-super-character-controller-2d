@@ -11,7 +11,7 @@ public partial class ConditionalStateTransition : SuperconStateController
 	// -----------------------------------------------------------------------------------------------------------------
 
 	[Export] public Node? Self;
-	[Export] public string Expression = "";
+	[Export(PropertyHint.Expression)] public string Expression = "";
 	[Export] public SuperconState? TransitionOnTrue;
 
 	[ExportGroup("Options")]

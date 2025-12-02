@@ -12,6 +12,7 @@ public partial class SlopeComponent : SuperconStateController
 	[ExportGroup("Slope Up Resistance")]
 	[Export] public float SlopeDecelerationPxPSecSqr = 0f;
 	[Export] public float SlopeMaxSpeedPxPSec = float.PositiveInfinity;
+	[Export(PropertyHint.ExpEasing)] public float SlopeSpeedDeclineFactor = 1f;
 
 	[ExportGroup("Slope Down Acceleration")]
 	[Export] public float SlideAccelerationPxPSecSqr = 0f;
@@ -28,32 +29,44 @@ public partial class SlopeComponent : SuperconStateController
 	{
 		base._PhysicsProcessActive(delta);
 
-		if (this.Character.IsOnSlope && this.Character.Velocity.Length() > Mathf.Epsilon)
+		if (this.Character.IsOnSlope && !this.Character.Velocity.IsZeroApprox())
 		{
-			float currentVelocity = this.Character.Velocity.Length();
-			float normalizedVelocity = Mathf.Lerp(
-				(this.Character.Velocity * Vector2.Right).Project(this.Character.GetFloorNormal().Rotated(Mathf.Pi / 2)).Length(),
-				currentVelocity,
-				this.NormalizationRate
-			);
+			Vector2 floorNormal = this.Character.GetFloorNormal();
+			float currentSpeed = this.Character.Velocity.Length();
+			float projectedSpeed = (this.Character.Velocity * Vector2.Right).Project(floorNormal.Rotated(Mathf.Pi / 2)).Length();
+			float normalizedSpeed = Mathf.Lerp(projectedSpeed, currentSpeed, this.NormalizationRate);
+			int directionH = Math.Sign(this.Character.Velocity.Dot(Vector2.Right)); // -1 = left, 1 = right
+			int directionV = Math.Sign((Vector2.Right * directionH).Dot(floorNormal)); // -1 = up, 1 = down
+			float targetSpeed = directionV switch
+			{
+				< 0 => Math.Min(normalizedSpeed, this.SlopeMaxSpeedPxPSec),
+				> 0 => Math.Max(normalizedSpeed, this.SlideMaxSpeedPxPSec),
+				_ => normalizedSpeed,
+			};
+			float acceleration = directionV switch
+			{
+				< 0 => this.SlopeDecelerationPxPSecSqr * (1f - floorNormal.Dot(Vector2.Up)),
+				> 0 => this.SlideAccelerationPxPSecSqr * Math.Abs(floorNormal.Dot(Vector2.Up)),
+				_ => 0f,
+			};
 			float newVelocity = this.Character.Velocity.Dot(Vector2.Up) >= 0
 				// Moving upward on the slope
 				? Mathf.MoveToward(
-					normalizedVelocity,
+					normalizedSpeed,
 					Math.Min(this.Character.Velocity.Length(), this.SlopeMaxSpeedPxPSec),
 					this.SlopeDecelerationPxPSecSqr
-						// * Math.Abs(this.Character.GetFloorNormal().Dot(Vector2.Right))
+						* (1f - floorNormal.Dot(Vector2.Up))
 						* (float) delta
 				)
 				// Moving downward on the slope
 				: Mathf.MoveToward(
-					normalizedVelocity,
+					normalizedSpeed,
 					Math.Max(this.Character.Velocity.Length(), this.SlideMaxSpeedPxPSec),
 					this.SlideAccelerationPxPSecSqr
-						// * Math.Abs(this.Character.GetFloorNormal().Dot(Vector2.Right))
+						* Math.Abs(floorNormal.Dot(Vector2.Up))
 						* (float) delta
 				);
-			Vector2 floorDirection = this.Character.GetFloorNormal().Rotated(Mathf.Pi / 2);
+			Vector2 floorDirection = floorNormal.Rotated(Mathf.Pi / 2);
 			this.Character.Velocity = floorDirection
 				* newVelocity
 				* Math.Sign(this.Character.Velocity.Dot(floorDirection)) switch {

@@ -12,32 +12,37 @@ public partial class SuperconPlugin : EditorPlugin
 	{
 		this.AddDebuggerPlugin(new EditorDebuggerPlugin());
 
+		Texture2D stateIcon = GD.Load<Texture2D>($"res://addons/{nameof(Supercon2D)}/icons/character_body_neutral.png");
+		Texture2D gravityIcon = GD.Load<Texture2D>($"res://addons/{nameof(Supercon2D)}/icons/character_body_gravity.png");
+		Texture2D singleAxisControlIcon = GD.Load<Texture2D>($"res://addons/{nameof(Supercon2D)}/icons/character_body_single_axis_control.png");
+		Texture2D animatedSprite = GD.Load<Texture2D>($"res://addons/{nameof(Supercon2D)}/icons/character_body_animated_sprite_3.png");
+		Texture2D binaryIcon = GD.Load<Texture2D>($"res://addons/{nameof(Supercon2D)}/icons/character_body_binary.png");
+		Texture2D keyboardIcon = GD.Load<Texture2D>($"res://addons/{nameof(Supercon2D)}/icons/character_body_keyboard.png");
+
 		// Core Types
 		this.AddCustomType(nameof(SuperconBody2D), nameof(CharacterBody2D), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(SuperconBody2D)}.cs"), null);
-		this.AddCustomType(nameof(SuperconInputMapping), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(SuperconInputMapping)}.cs"), null);
 		this.AddCustomType(nameof(SuperconStateMachine), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(SuperconStateMachine)}.cs"), null);
-		this.AddCustomType(nameof(SuperconState), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(SuperconState)}.cs"), null);
+		this.AddCustomType(nameof(SuperconState), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(SuperconState)}.cs"), stateIcon);
 
 		// State Controllers
-		this.AddCustomType(nameof(AnimationComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(AnimationComponent)}.cs"), null);
+		this.AddCustomType(nameof(AnimationComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(AnimationComponent)}.cs"), animatedSprite);
 		this.AddCustomType(nameof(BothAxisControlComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(BothAxisControlComponent)}.cs"), null);
 		this.AddCustomType(nameof(DirectionalPresetMovementComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(DirectionalPresetMovementComponent)}.cs"), null);
 		this.AddCustomType(nameof(ForceComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(ForceComponent)}.cs"), null);
-		this.AddCustomType(nameof(GravityComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(GravityComponent)}.cs"), null);
+		this.AddCustomType(nameof(GravityComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(GravityComponent)}.cs"), gravityIcon);
 		this.AddCustomType(nameof(ImpulseComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(ImpulseComponent)}.cs"), null);
-		this.AddCustomType(nameof(SingleAxisControlComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(SingleAxisControlComponent)}.cs"), null);
+		this.AddCustomType(nameof(SingleAxisControlComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(SingleAxisControlComponent)}.cs"), singleAxisControlIcon);
 		this.AddCustomType(nameof(SingleAxisPresetMovementComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(SingleAxisPresetMovementComponent)}.cs"), null);
 		this.AddCustomType(nameof(SlopeComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(SlopeComponent)}.cs"), null);
 
 		// State Transitions
-		this.AddCustomType(nameof(InputActionTransition), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateTransitions)}/{nameof(InputActionTransition)}.cs"), null);
-		this.AddCustomType(nameof(ConditionalStateTransition), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateTransitions)}/{nameof(ConditionalStateTransition)}.cs"), null);
+		this.AddCustomType(nameof(InputActionTransition), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateTransitions)}/{nameof(InputActionTransition)}.cs"), keyboardIcon);
+		this.AddCustomType(nameof(ConditionalStateTransition), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateTransitions)}/{nameof(ConditionalStateTransition)}.cs"), binaryIcon);
 	}
 
 	public override void _ExitTree()
 	{
 		this.RemoveCustomType(nameof(SuperconBody2D));
-		this.RemoveCustomType(nameof(SuperconInputMapping));
 		this.RemoveCustomType(nameof(SuperconStateMachine));
 		this.RemoveCustomType(nameof(SuperconState));
 

@@ -23,10 +23,10 @@ public partial class AnimationComponent : SuperconStateController
 	public enum PlayWhenEnum
 	{
 		StateEnter,
-		StateEnterIfConditionIsTrue,
 		StateExit,
-		StateExitIfConditionIsTrue,
-		IfConditionBecomesTrue,
+		ExpressionIsTrue,
+		StateEnterIfExpressionIsTrue,
+		StateExitIfExpressionIsTrue,
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -38,18 +38,18 @@ public partial class AnimationComponent : SuperconStateController
 	[Export(PropertyHint.Enum)] public string Animation = "";
 	[Export] public FlipHEnum FlipH = FlipHEnum.IfFacingLeft;
 	[Export(PropertyHint.Range, "0.25,4,0.05,or_greater,or_less")] public float AnimationSpeedScale = 1f;
-	[Export] public PlayWhenEnum PlayWhen
+	[Export] public PlayWhenEnum PlayAnimationWhen
 		{ get => field; set { field = value; this.NotifyPropertyListChanged(); } }
 		= PlayWhenEnum.StateEnter;
-	[Export] public string Condition = "";
 	[Export] public Node? Self;
+	[Export(PropertyHint.Expression)] public string Expression = "";
 	[Export] public Variant ContextVar = new Variant();
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// FIELDS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	private Expression Expression = new();
+	private Expression ExpressionParser = new();
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// PROPERTIES
@@ -102,11 +102,11 @@ public partial class AnimationComponent : SuperconStateController
 				this.AnimatedSprite = this.Character.GetChildren().OfType<AnimatedSprite2D>().FirstOrDefault();
 			}
 		}
-		else if (this.PlayWhen == PlayWhenEnum.IfConditionBecomesTrue)
+		else if (this.PlayAnimationWhen == PlayWhenEnum.ExpressionIsTrue)
 		{
-			if (this.Expression.Parse(this.Condition, ["context"]) != Error.Ok)
+			if (this.ExpressionParser.Parse(this.Expression, ["context"]) != Error.Ok)
 			{
-				GD.PrintErr($"[{nameof(AnimationComponent)}] Failed to parse expression: \"{this.Condition}\"");
+				GD.PrintErr($"[{nameof(AnimationComponent)}] Failed to parse expression: \"{this.Expression}\"");
 			}
 		}
 	}
@@ -134,14 +134,14 @@ public partial class AnimationComponent : SuperconStateController
 			case nameof(this.Animation):
 				property["hint_string"] = this.AnimatedSprite?.SpriteFrames?.GetAnimationNames().Join(",") ?? "";
 				break;
-			case nameof(this.Condition):
+			case nameof(this.Expression):
 			case nameof(this.Self):
 			case nameof(this.ContextVar):
-				property["usage"] = this.PlayWhen switch
+				property["usage"] = this.PlayAnimationWhen switch
 				{
-					PlayWhenEnum.StateEnterIfConditionIsTrue
-						or PlayWhenEnum.StateExitIfConditionIsTrue
-						or PlayWhenEnum.IfConditionBecomesTrue
+					PlayWhenEnum.ExpressionIsTrue
+						or PlayWhenEnum.StateEnterIfExpressionIsTrue
+						or PlayWhenEnum.StateExitIfExpressionIsTrue
 						=> (int) PropertyUsageFlags.Default,
 					_ => (int) PropertyUsageFlags.NoEditor,
 				};
@@ -157,9 +157,9 @@ public partial class AnimationComponent : SuperconStateController
 	{
 		base._EnterState();
 		if (
-			this.PlayWhen == PlayWhenEnum.StateEnter
-			|| this.PlayWhen == PlayWhenEnum.StateEnterIfConditionIsTrue
-			&& this.EvaluateCondition()
+			this.PlayAnimationWhen == PlayWhenEnum.StateEnter
+			|| this.PlayAnimationWhen == PlayWhenEnum.StateEnterIfExpressionIsTrue
+			&& this.EvaluateUserExpression()
 		)
 		{
 			this.Play();
@@ -169,9 +169,9 @@ public partial class AnimationComponent : SuperconStateController
 	public override void _ExitState()
 	{
 		if (
-			this.PlayWhen == PlayWhenEnum.StateExit
-			|| this.PlayWhen == PlayWhenEnum.StateExitIfConditionIsTrue
-			&& this.EvaluateCondition()
+			this.PlayAnimationWhen == PlayWhenEnum.StateExit
+			|| this.PlayAnimationWhen == PlayWhenEnum.StateExitIfExpressionIsTrue
+			&& this.EvaluateUserExpression()
 		)
 		{
 			this.Play();
@@ -182,9 +182,9 @@ public partial class AnimationComponent : SuperconStateController
 	public override void _ProcessActive(double delta)
 	{
 		base._ProcessActive(delta);
-		if (this.PlayWhen == PlayWhenEnum.IfConditionBecomesTrue)
+		if (this.PlayAnimationWhen == PlayWhenEnum.ExpressionIsTrue)
 		{
-			if (this.AnimatedSprite?.Animation != this.Animation && this.EvaluateCondition())
+			if (this.AnimatedSprite?.Animation != this.Animation && this.EvaluateUserExpression())
 			{
 				this.Play();
 			}
@@ -206,18 +206,18 @@ public partial class AnimationComponent : SuperconStateController
 		this.AnimatedSprite?.SpeedScale = this.AnimationSpeedScale;
 	}
 
-	private bool EvaluateCondition()
+	private bool EvaluateUserExpression()
 	{
 		try {
-			Variant result = this.Expression.Execute([this.ContextVar], this.Self);
+			Variant result = this.ExpressionParser.Execute([this.ContextVar], this.Self);
 			if (result.VariantType != Variant.Type.Bool)
 			{
-				GD.PrintErr($"[{nameof(AnimationComponent)}] Condition did not evaluate to a boolean: \"{this.Condition}\"");
+				GD.PrintErr($"[{nameof(AnimationComponent)}] Condition did not evaluate to a boolean: \"{this.Expression}\"");
 				return false;
 			}
 			return result.AsBool();
 		} catch (Exception e) {
-			GD.PrintErr($"[{nameof(AnimationComponent)}] Failed to evaluate condition: \"{this.Condition}\"", e);
+			GD.PrintErr($"[{nameof(AnimationComponent)}] Failed to evaluate condition: \"{this.Expression}\"", e);
 			return false;
 		}
 	}
