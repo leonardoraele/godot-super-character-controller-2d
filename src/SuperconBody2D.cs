@@ -152,6 +152,7 @@ public partial class SuperconBody2D : CharacterBody2D
 	{
 		if (Engine.IsEditorHint())
 		{
+			this.SetProcess(false);
 			return;
 		}
 		base._Process(delta);

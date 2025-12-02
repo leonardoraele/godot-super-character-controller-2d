@@ -95,14 +95,7 @@ public partial class AnimationComponent : SuperconStateController
 	public override void _Ready()
 	{
 		base._Ready();
-		if (Engine.IsEditorHint())
-		{
-			if (this.AnimatedSprite == null)
-			{
-				this.AnimatedSprite = this.Character.GetChildren().OfType<AnimatedSprite2D>().FirstOrDefault();
-			}
-		}
-		else if (this.PlayAnimationWhen == PlayWhenEnum.ExpressionIsTrue)
+		if (this.PlayAnimationWhen == PlayWhenEnum.ExpressionIsTrue)
 		{
 			if (this.ExpressionParser.Parse(this.Expression, ["context"]) != Error.Ok)
 			{

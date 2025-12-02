@@ -66,7 +66,7 @@ public partial class SuperconInputMapping : Resource
 
 	public void Update()
 	{
-		if (!this.Enabled || Engine.IsEditorHint())
+		if (!this.Enabled)
 		{
 			return;
 		}

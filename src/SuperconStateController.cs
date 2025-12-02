@@ -40,6 +40,7 @@ public partial class SuperconStateController : Node
 	{
 		if (Engine.IsEditorHint())
 		{
+			this.SetProcess(false);
 			return;
 		}
 		base._Process(delta);
@@ -53,6 +54,7 @@ public partial class SuperconStateController : Node
 	{
 		if (Engine.IsEditorHint())
 		{
+			this.SetPhysicsProcess(false);
 			return;
 		}
 		base._PhysicsProcess(delta);

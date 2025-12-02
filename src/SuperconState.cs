@@ -46,6 +46,7 @@ public partial class SuperconState : GodotUtils.StateMachine.BaseState
 	{
 		if (Engine.IsEditorHint())
 		{
+			this.SetPhysicsProcess(false);
 			return;
 		}
 		base._PhysicsProcess(delta);
