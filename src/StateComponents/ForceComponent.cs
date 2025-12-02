@@ -27,6 +27,12 @@ public partial class ForceComponent : SuperconStateController
 	[Export] public float AccelerationPxPSecSq = 500f;
 	[Export] public float MaxSpeedPxPSec = float.PositiveInfinity;
 
+	// TODO
+	// [ExportGroup("Changes Over Time")]
+	// [Export(PropertyHint.GroupEnable)] public bool TimeBased = false;
+	// [Export] public float InitialAccelerationPxPSecSq = 0f;
+	// [Export(PropertyHint.ExpEasing)] public float Curve = 1f;
+
 	// -----------------------------------------------------------------------------------------------------------------
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------
@@ -59,6 +65,15 @@ public partial class ForceComponent : SuperconStateController
 					this.ForceDirection * this.AccelerationPxPSecSq * (float) delta,
 					this.MaxSpeedPxPSec
 				);
+				GD.PrintS(new
+				{
+					this.Character.Velocity,
+					Force = this.ForceDirection * this.AccelerationPxPSecSq * (float) delta,
+					this.MaxSpeedPxPSec,
+					GetLastMotion = this.Character.GetLastMotion(),
+					GetPositionDelta = this.Character.GetPositionDelta(),
+					GetRealVelocity = this.Character.GetRealVelocity(),
+				});
 				break;
 		}
 	}
