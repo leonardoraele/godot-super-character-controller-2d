@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Godot;
 
@@ -22,8 +23,10 @@ public partial class AnimationComponent : SuperconStateController
 	public enum PlayWhenEnum
 	{
 		StateEnter,
+		StateEnterIfConditionIsTrue,
 		StateExit,
-		ConditionIsTrue,
+		StateExitIfConditionIsTrue,
+		IfConditionBecomesTrue,
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -99,7 +102,7 @@ public partial class AnimationComponent : SuperconStateController
 				this.AnimatedSprite = this.Character.GetChildren().OfType<AnimatedSprite2D>().FirstOrDefault();
 			}
 		}
-		else if (this.PlayWhen == PlayWhenEnum.ConditionIsTrue)
+		else if (this.PlayWhen == PlayWhenEnum.IfConditionBecomesTrue)
 		{
 			if (this.Expression.Parse(this.Condition, ["context"]) != Error.Ok)
 			{
@@ -134,9 +137,14 @@ public partial class AnimationComponent : SuperconStateController
 			case nameof(this.Condition):
 			case nameof(this.Self):
 			case nameof(this.ContextVar):
-				property["usage"] = this.PlayWhen == PlayWhenEnum.ConditionIsTrue
-					? (int) PropertyUsageFlags.Default
-					: (int) PropertyUsageFlags.NoEditor;
+				property["usage"] = this.PlayWhen switch
+				{
+					PlayWhenEnum.StateEnterIfConditionIsTrue
+						or PlayWhenEnum.StateExitIfConditionIsTrue
+						or PlayWhenEnum.IfConditionBecomesTrue
+						=> (int) PropertyUsageFlags.Default,
+					_ => (int) PropertyUsageFlags.NoEditor,
+				};
 				break;
 		}
 	}
@@ -148,7 +156,11 @@ public partial class AnimationComponent : SuperconStateController
 	public override void _EnterState()
 	{
 		base._EnterState();
-		if (this.PlayWhen == PlayWhenEnum.StateEnter)
+		if (
+			this.PlayWhen == PlayWhenEnum.StateEnter
+			|| this.PlayWhen == PlayWhenEnum.StateEnterIfConditionIsTrue
+			&& this.EvaluateCondition()
+		)
 		{
 			this.Play();
 		}
@@ -156,7 +168,11 @@ public partial class AnimationComponent : SuperconStateController
 
 	public override void _ExitState()
 	{
-		if (this.PlayWhen == PlayWhenEnum.StateExit)
+		if (
+			this.PlayWhen == PlayWhenEnum.StateExit
+			|| this.PlayWhen == PlayWhenEnum.StateExitIfConditionIsTrue
+			&& this.EvaluateCondition()
+		)
 		{
 			this.Play();
 		}
@@ -166,15 +182,11 @@ public partial class AnimationComponent : SuperconStateController
 	public override void _ProcessActive(double delta)
 	{
 		base._ProcessActive(delta);
-		if (this.PlayWhen == PlayWhenEnum.ConditionIsTrue)
+		if (this.PlayWhen == PlayWhenEnum.IfConditionBecomesTrue)
 		{
-			if (this.AnimatedSprite?.Animation != this.Animation)
+			if (this.AnimatedSprite?.Animation != this.Animation && this.EvaluateCondition())
 			{
-				Variant result = this.Expression.Execute([this.ContextVar], this.Self);
-				if (result.VariantType == Variant.Type.Bool && result.AsBool())
-				{
-					this.Play();
-				}
+				this.Play();
 			}
 		}
 		if (this.FlipH == FlipHEnum.IfFacingLeft)
@@ -192,5 +204,21 @@ public partial class AnimationComponent : SuperconStateController
 		this.AnimatedSprite?.Play(this.Animation);
 		this.AnimatedSprite?.FlipH = this.ShouldFlipH;
 		this.AnimatedSprite?.SpeedScale = this.AnimationSpeedScale;
+	}
+
+	private bool EvaluateCondition()
+	{
+		try {
+			Variant result = this.Expression.Execute([this.ContextVar], this.Self);
+			if (result.VariantType != Variant.Type.Bool)
+			{
+				GD.PrintErr($"[{nameof(AnimationComponent)}] Condition did not evaluate to a boolean: \"{this.Condition}\"");
+				return false;
+			}
+			return result.AsBool();
+		} catch (Exception e) {
+			GD.PrintErr($"[{nameof(AnimationComponent)}] Failed to evaluate condition: \"{this.Condition}\"", e);
+			return false;
+		}
 	}
 }
