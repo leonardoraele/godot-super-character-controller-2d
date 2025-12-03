@@ -3,7 +3,7 @@ using Godot;
 
 namespace Raele.Supercon2D.StateComponents;
 
-public partial class DirectionalPresetMovementComponent : SuperconStateController
+public partial class PresetMovementComponent : SuperconStateController
 {
 	// -----------------------------------------------------------------------------------------------------------------
 	// EXPORTS
@@ -48,8 +48,8 @@ public partial class DirectionalPresetMovementComponent : SuperconStateControlle
 	// -----------------------------------------------------------------------------------------------------------------
 
 	public TimeSpan Duration => TimeSpan.FromMilliseconds(this.DurationMs);
-	public Vector2 ResolvedDirection => Vector2.Right.Rotated(this.DirectionAngle)
-		* (this.UseFacing ? Vector2.Right * this.Character.FacingDirection : Vector2.One);
+	public Vector2 MovementDirection => Vector2.Right.Rotated(this.DirectionAngle)
+		* (this.UseFacing ? new Vector2(this.Character.FacingDirection, 1f) : Vector2.One);
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// METHODS
@@ -75,6 +75,8 @@ public partial class DirectionalPresetMovementComponent : SuperconStateControlle
 	{
 		base._PhysicsProcessActive(delta);
 		// TODO We could precalculate the jump height curve so that we don't need to read the curve twice every frame.
+		// TODO We could read this.Character.GetPositionDelta and accumulate the movement instead of recalculing the
+		// previous frame every time.
 		double thisFrameDurationProgress = this.State.ActiveDuration.TotalMilliseconds / this.DurationMs;
 		double thisFrameDistanceProgress = this.Curve?.Sample((float) thisFrameDurationProgress)
 			?? Math.Sin(thisFrameDurationProgress * Math.PI / 2);
@@ -82,6 +84,6 @@ public partial class DirectionalPresetMovementComponent : SuperconStateControlle
 		double prevFrameDistanceProgress = this.Curve?.Sample((float) prevFrameDurationProgress)
 			?? Math.Sin(prevFrameDurationProgress * Math.PI / 2);
 		double distanceDiffPx = this.DistancePx * (thisFrameDistanceProgress - prevFrameDistanceProgress);
-		this.Character.Velocity = this.ResolvedDirection * (float) (distanceDiffPx / delta);
+		this.Character.SetDirectionalVelocity(this.MovementDirection, (float) (distanceDiffPx / delta));
 	}
 }

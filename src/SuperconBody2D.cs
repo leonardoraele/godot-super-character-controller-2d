@@ -193,7 +193,15 @@ public partial class SuperconBody2D : CharacterBody2D
 		this.TimeOnWall = this.IsOnWall() ? this.TimeOnWall + TimeSpan.FromSeconds(delta) : TimeSpan.Zero;
 	}
 
+	/// <summary>
+	/// Applies the given force to the character's velocity.
+	/// </summary>
 	public void ApplyForce(Vector2 forcePxPSec) => this.Velocity += forcePxPSec;
+
+	/// <summary>
+	/// Applies the given force to the character's velocity, then limits the resulting velocity's magnitude along the
+	/// direction of the force to the given maximum speed.
+	/// </summary>
 	public void ApplyForce(Vector2 forcePxPSec, float maxSpeedPxPSec)
 	{
 		Vector2 addedVelocity = this.Velocity + forcePxPSec;
@@ -209,12 +217,10 @@ public partial class SuperconBody2D : CharacterBody2D
 			+ forceOrthogonalVelocity;
 	}
 
-	// public void Accelerate(Vector2 targetVelocity, float acceleration)
-	// 	=> new Vector2(
-	// 		Mathf.MoveToward(this.Velocity.X, targetVelocity.X, (float) Math.Abs(acceleration * Math.Cos(Math.Atan2(targetVelocity.Y, targetVelocity.X)))),
-	// 		Mathf.MoveToward(this.Velocity.Y, targetVelocity.Y, (float) Math.Abs(acceleration * Math.Sin(Math.Atan2(targetVelocity.Y, targetVelocity.X))))
-	// 	);
-
+	/// <summary>
+	/// Accelerates the character toward the given target velocity by rotating its velocity vector and changing its
+	/// magnitude by the given angular and linear acceleration values.
+	/// </summary>
 	public void AccelerateArc(Vector2 targetVelocity, float angularRotationRad, float linearAccelerationPxPSec)
 		=> this.Velocity =
 			Vector2.Right.Rotated(
@@ -222,26 +228,27 @@ public partial class SuperconBody2D : CharacterBody2D
 			)
 			* Mathf.MoveToward(targetVelocity.Length(), this.Velocity.Length(), linearAccelerationPxPSec);
 
-	/// <summary>
-	/// Accelerates the character toward the given target velocity. The acceleration is applied to each axis.
-	/// If the character is already moving faster than the target velocity, the acceleration is applied in the opposite
-	/// direction to slow down the character.
-	/// If the character is already moving at the target velocity, no acceleration is applied.
-	///
-	/// Params <code>accelerationX</code> and <code>accelerationY</code> must be positive. If they are negative, the
-	/// character will accelerate away from the target velocity.
-	///
-	/// This method only changes the character's Velocity. You still have to call <code>MoveAndSlide</code> or similar
-	/// to actually move the character.
-	/// </summary>
-	public void AccelerateXY(float targetVelocityX, float targetVelocityY, float accelerationX, float accelerationY)
-		=> this.Velocity = new Vector2(
-			Mathf.MoveToward(this.Velocity.X, targetVelocityX, accelerationX),
-			Mathf.MoveToward(this.Velocity.Y, targetVelocityY, accelerationY)
-		);
+	// /// <summary>
+	// /// Accelerates the character toward the given target velocity. The acceleration is applied to each axis.
+	// /// If the character is already moving faster than the target velocity, the acceleration is applied in the opposite
+	// /// direction to slow down the character.
+	// /// If the character is already moving at the target velocity, no acceleration is applied.
+	// ///
+	// /// Params <code>accelerationX</code> and <code>accelerationY</code> must be positive. If they are negative, the
+	// /// character will accelerate away from the target velocity.
+	// ///
+	// /// This method only changes the character's Velocity. You still have to call <code>MoveAndSlide</code> or similar
+	// /// to actually move the character.
+	// /// </summary>
+	// public void AccelerateXY(float targetVelocityX, float targetVelocityY, float accelerationX, float accelerationY)
+	// 	=> this.Velocity = new Vector2(
+	// 		Mathf.MoveToward(this.Velocity.X, targetVelocityX, accelerationX),
+	// 		Mathf.MoveToward(this.Velocity.Y, targetVelocityY, accelerationY)
+	// 	);
 
 	/// <summary>
-	/// Same as <code>Accelerate</code> but only applies acceleration to the X axis.
+	/// Changes the X velocity by moving it toward the target X velocity by the given acceleration.
+	/// The character's Y velocity is not affected.
 	/// </summary>
 	public void AccelerateX(float targetVelocityX, float accelerationX)
 	{
@@ -252,7 +259,8 @@ public partial class SuperconBody2D : CharacterBody2D
 	}
 
 	/// <summary>
-	/// Same as <code>Accelerate</code> but only applies acceleration to the Y axis.
+	/// Changes the Y velocity by moving it toward the target Y velocity by the given acceleration.
+	/// The character's X velocity is not affected.
 	/// </summary>
 	public void AccelerateY(float targetVelocityY, float accelerationY)
 	{
@@ -261,4 +269,32 @@ public partial class SuperconBody2D : CharacterBody2D
 			Mathf.MoveToward(this.Velocity.Y, targetVelocityY, accelerationY)
 		);
 	}
+
+	public void AccelerateDirection(Vector2 direction, float targetSpeedPxPSec, float accelerationPxPSec)
+	{
+		this.SetDirectionalVelocity(
+			direction,
+			Mathf.MoveToward(
+				this.GetDirectionalVelocity(direction).Length(),
+				targetSpeedPxPSec,
+				accelerationPxPSec
+			)
+		);
+	}
+
+	public void SetDirectionalVelocity(Vector2 velocity)
+		=> this.Velocity = velocity
+			+ this.GetDirectionalVelocity(velocity.Orthogonal());
+
+	public void SetDirectionalVelocity(Vector2 direction, float magnitude)
+		=> this.Velocity = direction.Normalized() * magnitude
+			+ this.GetDirectionalVelocity(direction.Orthogonal());
+
+	public Vector2 GetDirectionalVelocity(Vector2 direction)
+		=> this.Velocity
+			* new Vector2(
+				(float) Math.Cos(Math.Atan2(direction.Y, direction.X)),
+				(float) Math.Sin(Math.Atan2(direction.Y, direction.X))
+			)
+			.Abs();
 }
