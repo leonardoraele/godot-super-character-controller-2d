@@ -22,7 +22,7 @@ public partial class SuperconState : GodotUtils.StateMachine.BaseState
 	// PROPERTIES
 	// -----------------------------------------------------------------------------------------------------------------
 
-	public SuperconInputMapping InputManager => this.Character.InputMapping;
+	public SuperconInputMapping InputMapping => this.Character.InputMapping;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// GODOT EVENTS
@@ -39,16 +39,5 @@ public partial class SuperconState : GodotUtils.StateMachine.BaseState
 		{
 			this.Character.VelocityY = 0;
 		}
-	}
-
-	public override void _PhysicsProcess(double delta)
-	{
-		if (Engine.IsEditorHint())
-		{
-			this.SetPhysicsProcess(false);
-			return;
-		}
-		base._PhysicsProcess(delta);
-		Callable.From(this.Character.MoveAndSlide).CallDeferred();
 	}
 }

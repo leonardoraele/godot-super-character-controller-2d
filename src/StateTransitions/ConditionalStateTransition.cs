@@ -80,7 +80,7 @@ public partial class ConditionalStateTransition : SuperconStateController
 		Error error = this.CompiledExpression.Parse(this.Expression, ["context"]);
 		if (error != Error.Ok)
 		{
-			GD.PrintErr($"[{this.GetType().FullName}] Failed to parse expression '{this.Expression}': {this.CompiledExpression.GetErrorText()}");
+			GD.PrintErr($"[{nameof(ConditionalStateTransition)} at \"{this.GetPath()}\"] Failed to parse expression. Error: {this.CompiledExpression.GetErrorText()}");
 		}
 	}
 
@@ -90,17 +90,18 @@ public partial class ConditionalStateTransition : SuperconStateController
 		try
 		{
 			result = this.CompiledExpression.Execute([this.ContextVar], this.Self ?? this);
-		} catch
+		} catch (Exception e)
 		{
+			GD.PrintErr($"[{nameof(ConditionalStateTransition)} at \"{this.GetPath()}\"] An exception occured while executing expression. Exception: {e}");
 			result = new Variant();
 		}
 		if (this.CompiledExpression.HasExecuteFailed())
 		{
-			GD.PrintErr($"[{this.GetType().FullName}] Failed to execute expression '{this.Expression}': {this.CompiledExpression.GetErrorText()}");
+			GD.PrintErr($"[{nameof(ConditionalStateTransition)} at \"{this.GetPath()}\"] Failed to execute expression. Error: {this.CompiledExpression.GetErrorText()}");
 			return false;
 		} else if (result.VariantType != Variant.Type.Bool)
 		{
-			GD.PrintErr($"[{this.GetType().FullName}] Expression '{this.Expression}' did not evaluate to a boolean value.");
+			GD.PrintErr($"[{nameof(ConditionalStateTransition)} at \"{this.GetPath()}\"] Failed to test expression. Cause: Expression did not evaluate to a boolean value. Result: {result} ({result.VariantType})");
 			return false;
 		}
 		return result.AsBool();

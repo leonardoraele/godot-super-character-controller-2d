@@ -18,78 +18,10 @@ public partial class SuperconBody2D : CharacterBody2D
 	}
 
 	// /// <summary>
-	// /// If true, the character will rotate to face the direction of movement.
+	// /// If enabled, constantly updates the character's transform so that the positive X axis is aligned with the
+	// /// character's facing direction.
 	// /// </summary>
-	// [Export] public bool Rotate;
-
-	// [ExportGroup("Systemic Behavior")]
-	// /// Speed applied when the character jumps from a wall if they are pressing the Dash action.
-	// /// The sign/direction of each axis is be ignored; only the module is used.
-	// /// </summary>
-	// [Export] public Vector2 DashWallJumpKickstartSpeedPxPSec { get; private set; } = Vector2.One * 220;
-
-	/// <summary>
-	/// Applies some physics force to the character and disables their control for a short duration.
-	/// This method is intended to be used when the player character is damaged and becomes disabled for a short
-	/// duration. (i.e. like in Spelunky)
-	/// </summary>
-	/// <param name="force"></param>
-	/// <param name="cancelMomentum"></param>
-	/// <param name="durationMs"></param>
-	// public void DamagePush(Vector2 force, bool cancelMomentum, ulong durationMs) {
-	// }
-
-	/// <summary>
-	/// Early jump input tolerance time. (if player enters jump input while jump action is not possible, saves the input
-	/// for up to this much time to perform the jump later if it becomes possible within this time frame)
-	/// </summary>
-	[ExportGroup("Assist Options")]
-	[Obsolete][Export] public ulong JumpInputBufferSensitivityMs { get; private set; } = 150; // TODO
-	/// <summary>
-	/// Late jump input tolerance time. (if player enters jump input after jump action is no longer possible, allow the
-	/// character to jump anyway as long as it was possible up to this much time before)
-	/// </summary>
-	[Obsolete][Export] public ulong CoyoteJumpLeniencyMs { get; private set; } = 150; // TODO
-	[Obsolete][Export] public ulong DashInputBufferSensitivityMs { get; private set; } = 150; // TODO
-	/// <summary>
-	/// Max time the character floats below a ceiling when they hit a ceiling during a jump before they start falling.
-	/// Player can cancel ceiling slide by releasing the jump button earlier.
-	/// </summary>
-	[Obsolete][Export] public ulong CeilingSlideTimeMs { get; private set; } = 150; // TODO
-	/// <summary>
-	/// This property determines how much time, in miliseconds, the player must hold a directional input in the opposite
-	/// direction to a wall to let go of that wall during a wall climb or wall slide.
-	///
-	/// This property is meant to be used as a prevention against accidental input mistakes by making so that the
-	/// character will remain stuck to the wall even if the player press a directional input that would normally cause
-	/// them to drop off the wall. Instead, the player has to hold the input for a short time to drop.
-	///
-	/// If this property is set to 0, the player will let go of the wall as soon as the player presses a directional
-	/// input in a direction opposite to the wall they are climbing or sliding. They will still remain stuck to the wall
-	/// if they don't enter any horizontal directional input.
-	///
-	/// If this property is set to -1, the character must hold the directional input toward the wall to remain stuck to
-	/// it. Releasing the directional input will make the character let go of the wall.
-	/// </summary>
-	[Obsolete("Use WallClimbDirectionalInputDeadZone instead")]
-	[Export] public int WallDropPreventionLeniencyMs { get; private set; } = 150;
-	/// <summary>
-	/// This property determines the minimum directional input value the player must input in the opposite direction to
-	/// a wall to let go of that wall during a wall climb or wall slide.
-	///
-	/// This property is meant to be used as a prevention against accidental input mistakes by making so that the
-	/// character will remain stuck to the wall even if the player accidentaly inputs a small directional input value
-	/// that would normally cause them to drop off the wall. Instead, small input values will be ignored.
-	///
-	/// If this property is set to 0, the player will let go of the wall as soon as the player presses a directional
-	/// input in a direction opposite to the wall they are climbing or sliding. They will still remain stuck to the wall
-	/// if they don't enter any horizontal directional input.
-	///
-	/// If this property is set to a negative value, the character must hold that much directional input toward the wall
-	/// to remain stuck to it. Releasing the directional input will make the character let go of the wall.
-	/// </summary>
-	[Export(PropertyHint.Range, "-1,1,0.01")]
-	[Obsolete] public float WallClimbDirectionalInputDeadZone { get; private set; } = 0.05f;
+	// [Export] public bool TransformFollowsFacingDirection = false;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// SIGNALS
@@ -160,6 +92,17 @@ public partial class SuperconBody2D : CharacterBody2D
 		this.UpdateLastOnFloorPosition();
 		this.UpdateFacing();
 		this.UpdateContactTrackers(delta);
+	}
+
+	public override void _PhysicsProcess(double delta)
+	{
+		if (Engine.IsEditorHint())
+		{
+			this.SetPhysicsProcess(false);
+			return;
+		}
+		base._PhysicsProcess(delta);
+		this.CallDeferred(MethodName.MoveAndSlide);
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
