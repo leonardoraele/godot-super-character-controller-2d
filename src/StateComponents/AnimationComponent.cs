@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Net.Quic;
+using System.Threading.Tasks;
 using Godot;
 
 namespace Raele.Supercon2D.StateComponents;
@@ -29,6 +31,14 @@ public partial class AnimationComponent : SuperconStateController
 		StateExitIfExpressionIsTrue,
 	}
 
+	public enum SpeedScaleModeEnum
+	{
+		Constant,
+		BasedOnAbsoluteVelocityX,
+		BasedOnAbsoluteVelocityY,
+		BasedOnVelocityMagnitude,
+	}
+
 	// -----------------------------------------------------------------------------------------------------------------
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------
@@ -37,13 +47,22 @@ public partial class AnimationComponent : SuperconStateController
 		{ get => field; set { field = value; this.NotifyPropertyListChanged(); }} = null;
 	[Export(PropertyHint.Enum)] public string Animation = "";
 	[Export] public FlipHEnum FlipH = FlipHEnum.IfFacingLeft;
-	[Export(PropertyHint.Range, "0.25,4,0.05,or_greater,or_less")] public float AnimationSpeedScale = 1f;
 	[Export] public PlayWhenEnum PlayAnimationWhen
 		{ get => field; set { field = value; this.NotifyPropertyListChanged(); } }
 		= PlayWhenEnum.StateEnter;
 	[Export] public Node? Self;
 	[Export(PropertyHint.Expression)] public string Expression = "";
 	[Export] public Variant ContextVar = new Variant();
+	[Export] public SuperconState? TransitionOnAnimationEnd;
+
+	[ExportGroup("Speed Scale", "SpeedScale")]
+	[Export(PropertyHint.GroupEnable)] public bool SpeedScaleEnabled = false;
+	[Export] public SpeedScaleModeEnum SpeedScaleMode
+		{ get => field; set { field = value; this.NotifyPropertyListChanged(); } }
+		= SpeedScaleModeEnum.Constant;
+	[Export(PropertyHint.Range, "0.25,4,0.05,or_greater,or_less")] public float SpeedScaleFixedValue = 1f;
+	[Export] public Curve? SpeedScaleValueByVelocity;
+	[Export] public bool SpeedScaleResetOnAnimationEnd = true;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// FIELDS
@@ -139,6 +158,16 @@ public partial class AnimationComponent : SuperconStateController
 					_ => (int) PropertyUsageFlags.NoEditor,
 				};
 				break;
+			case nameof(this.SpeedScaleFixedValue):
+				property["usage"] = this.SpeedScaleEnabled && this.SpeedScaleMode == SpeedScaleModeEnum.Constant
+					? (int) PropertyUsageFlags.Default
+					: (int) PropertyUsageFlags.NoEditor;
+				break;
+			case nameof(this.SpeedScaleValueByVelocity):
+				property["usage"] = this.SpeedScaleEnabled && this.SpeedScaleMode != SpeedScaleModeEnum.Constant
+					? (int) PropertyUsageFlags.Default
+					: (int) PropertyUsageFlags.NoEditor;
+				break;
 		}
 	}
 
@@ -182,9 +211,19 @@ public partial class AnimationComponent : SuperconStateController
 				this.Play();
 			}
 		}
-		if (this.FlipH == FlipHEnum.IfFacingLeft)
+		if (this.FlipH == FlipHEnum.IfFacingLeft && this.AnimatedSprite?.Animation == this.Animation)
 		{
 			this.AnimatedSprite?.FlipH = this.ShouldFlipH;
+		}
+		if (this.SpeedScaleEnabled && this.AnimatedSprite?.Animation == this.Animation)
+		{
+			this.AnimatedSprite.SpeedScale = this.SpeedScaleMode switch
+			{
+				SpeedScaleModeEnum.BasedOnAbsoluteVelocityX => this.SpeedScaleValueByVelocity?.SampleBaked(Math.Abs(this.Character.Velocity.X)) ?? 1f,
+				SpeedScaleModeEnum.BasedOnAbsoluteVelocityY => this.SpeedScaleValueByVelocity?.SampleBaked(Math.Abs(this.Character.Velocity.Y)) ?? 1f,
+				SpeedScaleModeEnum.BasedOnVelocityMagnitude => this.SpeedScaleValueByVelocity?.SampleBaked(this.Character.Velocity.Length()) ?? 1f,
+				_ => 1f,
+			};
 		}
 	}
 
@@ -196,7 +235,48 @@ public partial class AnimationComponent : SuperconStateController
 	{
 		this.AnimatedSprite?.Play(this.Animation);
 		this.AnimatedSprite?.FlipH = this.ShouldFlipH;
-		this.AnimatedSprite?.SpeedScale = this.AnimationSpeedScale;
+
+		if (this.SpeedScaleEnabled && this.SpeedScaleMode == SpeedScaleModeEnum.Constant)
+		{
+			this.AnimatedSprite?.SpeedScale = this.SpeedScaleFixedValue;
+		}
+		if (this.SpeedScaleEnabled && this.SpeedScaleResetOnAnimationEnd)
+		{
+			float originalSpeedScale = this.AnimatedSprite?.SpeedScale ?? 1f;
+			this.WaitAnimationFinishedOrChanged().ContinueWith(task =>
+			{
+				if (task.Result == 'C')
+				{
+					return;
+				}
+				this.AnimatedSprite?.SpeedScale = originalSpeedScale;
+			});
+		}
+		if (this.TransitionOnAnimationEnd != null)
+		{
+			this.WaitAnimationFinishedOrChanged().ContinueWith(task =>
+			{
+				if (task.Result == 'C')
+				{
+					return;
+				}
+				this.StateMachine.QueueTransition(this.TransitionOnAnimationEnd);
+			});
+		}
+	}
+
+	private Task<char> WaitAnimationFinishedOrChanged() {
+		TaskCompletionSource<char> source = new();
+		Callable finished = Callable.From(() => source.SetResult('F'));
+		Callable changed = Callable.From(() => source.SetResult('C'));
+		this.AnimatedSprite?.Connect(AnimatedSprite2D.SignalName.AnimationFinished, finished);
+		this.AnimatedSprite?.Connect(AnimatedSprite2D.SignalName.AnimationChanged, changed);
+		source.Task.ContinueWith(_ => Callable.From(() =>
+		{
+			this.AnimatedSprite?.Disconnect(AnimatedSprite2D.SignalName.AnimationFinished, finished);
+			this.AnimatedSprite?.Disconnect(AnimatedSprite2D.SignalName.AnimationChanged, changed);
+		}).CallDeferred());
+		return source.Task;
 	}
 
 	private bool EvaluateUserExpression()
