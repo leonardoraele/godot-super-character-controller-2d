@@ -54,11 +54,7 @@ public partial class SuperconBody2D : CharacterBody2D
 	/// any value greater than 0 means the character is facing right, and 0 means the character is not facing any.
 	/// A value of 0 might be used if, for example, the character is facing the camera or away from the camera.
 	/// </summary>
-	public int FacingDirection
-	{
-		get;
-		set => field = Math.Sign(value);
-	} = 1;
+	public int FacingDirection { get; set => field = Math.Sign(value); } = 1;
 
 	public float VelocityX
 	{
@@ -76,10 +72,21 @@ public partial class SuperconBody2D : CharacterBody2D
 	// GODOT EVENTS
 	// -----------------------------------------------------------------------------------------------------------------
 
+	[Signal] public delegate void StaeChangedEventHandler(SuperconState? newState, SuperconState? oldState);
+
+	// -----------------------------------------------------------------------------------------------------------------
+	// GODOT EVENTS
+	// -----------------------------------------------------------------------------------------------------------------
+
 	public override void _Ready()
 	{
 		base._Ready();
 		this.ResetState();
+		this.StateMachine.TransitionCompleted += transition =>
+		{
+			GD.PrintS(Time.GetTicksMsec(), $"[{nameof(SuperconBody2D)}] 🔀 State changed: {transition.StateOut?.Name ?? "<null>"} → {transition.StateIn?.Name ?? "<null>"}");
+			this.EmitSignalStateChanged(transition.StateIn, transition.StateOut);
+		};
 	}
 
 	public override void _Process(double delta)

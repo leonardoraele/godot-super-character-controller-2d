@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Net.Quic;
 using System.Threading.Tasks;
 using Godot;
 
@@ -204,12 +203,13 @@ public partial class AnimationComponent : SuperconStateController
 	public override void _SuperconProcess(double delta)
 	{
 		base._SuperconProcess(delta);
-		if (this.PlayAnimationWhen == PlayWhenEnum.ExpressionIsTrue)
+		if (
+			this.PlayAnimationWhen == PlayWhenEnum.ExpressionIsTrue
+			&& this.AnimatedSprite?.Animation != this.Animation
+			&& this.EvaluateUserExpression()
+		)
 		{
-			if (this.AnimatedSprite?.Animation != this.Animation && this.EvaluateUserExpression())
-			{
-				this.Play();
-			}
+			this.Play();
 		}
 		if (this.FlipH == FlipHEnum.IfFacingLeft && this.AnimatedSprite?.Animation == this.Animation)
 		{
