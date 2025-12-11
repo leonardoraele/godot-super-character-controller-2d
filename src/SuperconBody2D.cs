@@ -81,6 +81,10 @@ public partial class SuperconBody2D : CharacterBody2D
 	public override void _Ready()
 	{
 		base._Ready();
+		if (Engine.IsEditorHint())
+		{
+			return;
+		}
 		this.ResetState();
 		this.StateMachine.TransitionCompleted += transition =>
 		{
