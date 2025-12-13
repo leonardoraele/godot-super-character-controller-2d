@@ -12,8 +12,7 @@ public partial class SuperconState : Node2D, SuperconStateMachine.IState
 	// -----------------------------------------------------------------------------------------------------------------
 
 	[Export(PropertyHint.Flags, "X:1,Y:2")] public byte ResetVelocityOnEnter = 0;
-	[Export] public ProcessModeEnum ProcessModeWhenActive = ProcessModeEnum.Inherit;
-	[Export] public ProcessModeEnum ProcessModeWhenInactive = ProcessModeEnum.Disabled;
+	[Export] public bool ProcessWhenInactive = false;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// FIELDS
@@ -95,7 +94,8 @@ public partial class SuperconState : Node2D, SuperconStateMachine.IState
 		{
 			return;
 		}
-		this.ProcessMode = this.ProcessModeWhenActive;
+		this.SetProcess(true);
+		this.SetPhysicsProcess(true);
 		if ((this.ResetVelocityOnEnter & 1) != 0)
 		{
 			this.Character.VelocityX = 0;
@@ -120,7 +120,8 @@ public partial class SuperconState : Node2D, SuperconStateMachine.IState
 		{
 			return;
 		}
-		this.ProcessMode = this.ProcessModeWhenInactive;
+		this.SetProcess(this.ProcessWhenInactive);
+		this.SetPhysicsProcess(this.ProcessWhenInactive);
 		this.EmitSignalStateExited(transition);
 		this.GetChildren().ToList().ForEach(child =>
 		{
@@ -130,4 +131,6 @@ public partial class SuperconState : Node2D, SuperconStateMachine.IState
 			}
 		});
 	}
+
+	public void QueueTransition() => this.StateMachine.QueueTransition(this);
 }
