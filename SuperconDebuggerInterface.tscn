@@ -1,0 +1,84 @@
+[gd_scene load_steps=4 format=3 uid="uid://bc4ft8kivco61"]
+
+[sub_resource type="GDScript" id="GDScript_6wsn2"]
+script/source = "extends Control
+
+@export var character: CharacterBody2D
+"
+
+[sub_resource type="GDScript" id="GDScript_fpan4"]
+script/source = "extends Control
+
+@onready var character = $\"../../..\".character
+
+func _process(delta: float) -> void:
+	queue_redraw()
+
+func _draw() -> void:
+	var center: Vector2 = size / 2
+	var radius: float = min(size.x, size.y) / 2
+	var max_velocity: float = 900
+	var end: Vector2 = center + character.velocity * radius / max_velocity
+	draw_circle(center, radius, Color.WHITE, true)
+	draw_circle(center, radius * 3/4, Color.LIGHT_GRAY, false)
+	draw_circle(center, radius * 1/4, Color.LIGHT_GRAY, false)
+	draw_line(center, center + Vector2.RIGHT.rotated(PI * 2/12) * radius, Color.LIGHT_GRAY)
+	draw_line(center, center + Vector2.RIGHT.rotated(PI * 3/12) * radius, Color.LIGHT_GRAY)
+	draw_line(center, center + Vector2.RIGHT.rotated(PI * 4/12) * radius, Color.LIGHT_GRAY)
+	draw_line(center, center + Vector2.RIGHT.rotated(PI * 8/12) * radius, Color.LIGHT_GRAY)
+	draw_line(center, center + Vector2.RIGHT.rotated(PI * 9/12) * radius, Color.LIGHT_GRAY)
+	draw_line(center, center + Vector2.RIGHT.rotated(PI * 10/12) * radius, Color.LIGHT_GRAY)
+	draw_line(center, center + Vector2.RIGHT.rotated(PI * 14/12) * radius, Color.LIGHT_GRAY)
+	draw_line(center, center + Vector2.RIGHT.rotated(PI * 15/12) * radius, Color.LIGHT_GRAY)
+	draw_line(center, center + Vector2.RIGHT.rotated(PI * 16/12) * radius, Color.LIGHT_GRAY)
+	draw_line(center, center + Vector2.RIGHT.rotated(PI * 20/12) * radius, Color.LIGHT_GRAY)
+	draw_line(center, center + Vector2.RIGHT.rotated(PI * 21/12) * radius, Color.LIGHT_GRAY)
+	draw_line(center, center + Vector2.RIGHT.rotated(PI * 22/12) * radius, Color.LIGHT_GRAY)
+	draw_line(center, end, Color.WEB_GREEN, 4)
+	draw_circle(end, 4, Color.WEB_GREEN)
+	draw_circle(center, radius * 4/4, Color.BLACK, false)
+	draw_circle(center, radius * 2/4, Color.BLACK, false)
+	draw_line(center, center + Vector2.RIGHT.rotated(PI * 0/12) * radius, Color.BLACK)
+	draw_line(center, center + Vector2.RIGHT.rotated(PI * 6/12) * radius, Color.BLACK)
+	draw_line(center, center + Vector2.RIGHT.rotated(PI * 12/12) * radius, Color.BLACK)
+	draw_line(center, center + Vector2.RIGHT.rotated(PI * 18/12) * radius, Color.BLACK)
+"
+
+[sub_resource type="GDScript" id="GDScript_cfi8b"]
+script/source = "extends Label
+
+@onready var character: CharacterBody2D = $\"../../..\".character
+
+func _process(delta: float) -> void:
+	text = \"Velocity: {velocity}px/s ({angle}º)\".format({
+		\"velocity\": \"%.0f\" % character.velocity.length(),
+		\"angle\": \"%.0f\" % rad_to_deg(character.velocity.angle()),
+	})
+"
+
+[node name="Control <SuperconDebuggerInterface>" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_6wsn2")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+layout_mode = 0
+offset_right = 319.0
+offset_bottom = 141.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
+layout_mode = 2
+
+[node name="Control <Velocity Meter>" type="Control" parent="PanelContainer/VBoxContainer"]
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+script = SubResource("GDScript_fpan4")
+
+[node name="Label <Velocity Monitor>" type="Label" parent="PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "Velocity"
+script = SubResource("GDScript_cfi8b")
