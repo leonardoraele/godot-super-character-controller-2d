@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Raele.Supercon2D;
 
-[Tool]
+[Tool][GlobalClass]
 public partial class SuperconBody2D : CharacterBody2D
 {
 	// -----------------------------------------------------------------------------------------------------------------

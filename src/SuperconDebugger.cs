@@ -4,17 +4,31 @@ using Godot.Collections;
 
 namespace Raele.Supercon2D;
 
-[Tool]
+[Tool][GlobalClass]
 public partial class SuperconDebugger : CanvasLayer
 {
+	// -----------------------------------------------------------------------------------------------------------------
+	// EXPORTS
+	// -----------------------------------------------------------------------------------------------------------------
+
 	[Export] public string ToggleVisibilityInputAction = "ui_menu";
+
+	// -----------------------------------------------------------------------------------------------------------------
+	// COMPUTED PROPERTIES
+	// -----------------------------------------------------------------------------------------------------------------
+
+	public SuperconBody2D Character => this.GetParent<SuperconBody2D>();
+
+	// -----------------------------------------------------------------------------------------------------------------
+	// OVERRIDES
+	// -----------------------------------------------------------------------------------------------------------------
 
 	public override void _Ready()
 	{
 		// this.Visible = false;
 		this.ProcessMode = ProcessModeEnum.Always;
 		Node node = ResourceLoader.Load<PackedScene>($"res://addons/{nameof(Supercon2D)}/SuperconDebuggerInterface.tscn").Instantiate();
-		node.Set("character", this.GetParent<SuperconBody2D>());
+		node.Set("debugger", this);
 		this.AddChild(node);
 	}
 

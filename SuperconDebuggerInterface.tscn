@@ -1,9 +1,15 @@
-[gd_scene load_steps=4 format=3 uid="uid://bc4ft8kivco61"]
+[gd_scene load_steps=5 format=3 uid="uid://bc4ft8kivco61"]
+
+[ext_resource type="Script" uid="uid://dewfdcqrkjauk" path="res://addons/Supercon2D/src/SuperconState.cs" id="1_fpan4"]
 
 [sub_resource type="GDScript" id="GDScript_6wsn2"]
 script/source = "extends Control
 
-@export var character: CharacterBody2D
+@export var debugger: SuperconDebugger
+
+var character: SuperconBody2D:
+	get:
+		return debugger.Character
 "
 
 [sub_resource type="GDScript" id="GDScript_fpan4"]
@@ -82,3 +88,7 @@ script = SubResource("GDScript_fpan4")
 layout_mode = 2
 text = "Velocity"
 script = SubResource("GDScript_cfi8b")
+
+[node name="SuperconState" type="Node2D" parent="."]
+script = ExtResource("1_fpan4")
+metadata/_custom_type_script = "uid://dewfdcqrkjauk"
