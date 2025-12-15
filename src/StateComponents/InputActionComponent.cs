@@ -82,9 +82,9 @@ public partial class InputActionComponent : SuperconStateComponent
 	// GODOT EVENTS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	public override void _Process(double delta)
+	public override void _SuperconProcess(double delta)
 	{
-		base._Process(delta);
+		base._SuperconProcess(delta);
 		if (Engine.IsEditorHint())
 		{
 			this.SetProcess(false);

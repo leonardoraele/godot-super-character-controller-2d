@@ -60,8 +60,8 @@ public partial class PresetMovementComponent : SuperconStateComponent
 	// SIGNALS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	[Signal] public delegate void MovementCompleteEventHandler();
-	[Signal] public delegate void MovementInterruptedEventHandler();
+	[Signal] public delegate void MovementCompletedEventHandler();
+	[Signal] public delegate void MovementInterruptedEventHandler(KinematicCollision2D collision);
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// LOCAL TYPES
@@ -82,30 +82,47 @@ public partial class PresetMovementComponent : SuperconStateComponent
 	{
 		base._SuperconEnter(transition);
 		this.InternalVelocity = Vector2.Zero;
+		this.SetPhysicsProcess(true);
 	}
 
 	public override void _SuperconPhysicsProcess(double delta)
 	{
 		base._SuperconPhysicsProcess(delta);
 
+		// Remove any previously applied velocity.
+		this.Character.Velocity -= this.InternalVelocity;
+
+		// Handles instant movement when the duration is zero and prevents division by zero.
+		if (Mathf.IsZeroApprox(this.DurationMs))
+		{
+			this.Character.MoveAndCollide(this.Destination);
+			this.SetPhysicsProcess(false);
+			this.EmitSignalMovementCompleted();
+			return;
+		}
+
+		// Handles movement interruption on collision.
+		if (
+			!this.InternalVelocity.IsEqualApprox(Vector2.Zero)
+			&& this.Character.GetLastSlideCollision() is KinematicCollision2D collision
+			&& this.TransitionOnCollision != null
+		)
+		{
+			this.Character.QueueTransition(this.TransitionOnCollision);
+			this.SetPhysicsProcess(false);
+			this.EmitSignalMovementInterrupted(collision);
+			return;
+		}
+
+		// Handles ending the movement when the duration is exceeded.
 		if (this.State.ActiveDuration >= this.Duration)
 		{
-			// Handles instant movement when the duration is zero and prevents division by zero.
-			if (Mathf.IsZeroApprox(this.DurationMs))
-			{
-				this.Character.MoveAndCollide(this.Destination);
-			}
-
 			if (this.TransitionOnMoveComplete != null)
 			{
 				this.Character.QueueTransition(this.TransitionOnMoveComplete);
 			}
-			else
-			{
-				this.Character.ResetState();
-			}
-
-			this.EmitSignalMovementComplete();
+			this.SetPhysicsProcess(false);
+			this.EmitSignalMovementCompleted();
 			return;
 		}
 
@@ -117,15 +134,13 @@ public partial class PresetMovementComponent : SuperconStateComponent
 		// previous frame every time.
 		Vector2 thisFramePosition = this.CalculateExpectedPosition(thisFrameActiveDuration / this.Duration);
 		Vector2 lastFramePosition = this.CalculateExpectedPosition(lastFrameActiveDuration / this.Duration);
-		this.Character.Velocity -= this.InternalVelocity;
-		this.InternalVelocity = (thisFramePosition - lastFramePosition) / (float) delta;
-		this.Character.Velocity += this.InternalVelocity;
+		this.Character.Velocity += this.InternalVelocity = (thisFramePosition - lastFramePosition) / (float) delta;
 	}
 
 	private Vector2 CalculateExpectedPosition(double progress)
 	{
 		progress = Mathf.Clamp(progress, 0, 1);
-		double distanceProgress = this.Curve?.Sample((float) progress) ?? Math.Sin(progress * Math.PI / 2);
+		double distanceProgress = this.Curve?.SampleBaked((float) progress) ?? Math.Sin(progress * Math.PI / 2);
 		return this.SamplePath(distanceProgress);
 	}
 

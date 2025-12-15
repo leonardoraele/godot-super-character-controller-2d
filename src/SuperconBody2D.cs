@@ -49,6 +49,7 @@ public partial class SuperconBody2D : CharacterBody2D
 	// PROPERTIES
 	// -----------------------------------------------------------------------------------------------------------------
 
+	public SuperconState? ActiveState => this.StateMachine.ActiveState;
 	public bool IsFacingLeft => this.FacingDirection < 0;
 	public bool IsFacingRight => this.FacingDirection > 0;
 	public bool IsFacingNeutral => this.FacingDirection == 0;
@@ -276,6 +277,7 @@ public partial class SuperconBody2D : CharacterBody2D
 	// -----------------------------------------------------------------------------------------------------------------
 
 	public void ResetState() => this.StateMachine.QueueTransition(this.DefaultState);
-	public void QueueTransition(string stateName) => this.StateMachine.QueueTransition(this.GetParent().GetNode(stateName) as SuperconState);
-	public void QueueTransition(SuperconState state) => this.StateMachine.QueueTransition(state);
+	public void QueueTransition(string stateName, Variant data = default)
+		=> this.StateMachine.QueueTransition(this.GetParent().GetNode(stateName) as SuperconState, data);
+	public void QueueTransition(SuperconState state, Variant data = default) => this.StateMachine.QueueTransition(state, data);
 }

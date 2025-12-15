@@ -27,15 +27,15 @@ public abstract partial class SuperconStateComponent : Node2D
 	public override void _EnterTree()
 	{
 		base._ExitTree();
-		this.GetParentOrNull<SuperconState>()?.Connect(SuperconState.SignalName.StateEntered, new Callable(this, MethodName._SuperconEnter));
-		this.GetParentOrNull<SuperconState>()?.Connect(SuperconState.SignalName.StateExited, new Callable(this, MethodName._SuperconExit));
+		this.GetParentOrNull<SuperconState>()?.Connect(SuperconState.SignalName.StateEntered, new Callable(this, MethodName.OnStateEntered));
+		this.GetParentOrNull<SuperconState>()?.Connect(SuperconState.SignalName.StateExited, new Callable(this, MethodName.OnStateExited));
 	}
 
 	public override void _ExitTree()
 	{
 		base._ExitTree();
-		this.GetParentOrNull<SuperconState>()?.Disconnect(SuperconState.SignalName.StateEntered, new Callable(this, MethodName._SuperconEnter));
-		this.GetParentOrNull<SuperconState>()?.Disconnect(SuperconState.SignalName.StateExited, new Callable(this, MethodName._SuperconExit));
+		this.GetParentOrNull<SuperconState>()?.Disconnect(SuperconState.SignalName.StateEntered, new Callable(this, MethodName.OnStateEntered));
+		this.GetParentOrNull<SuperconState>()?.Disconnect(SuperconState.SignalName.StateExited, new Callable(this, MethodName.OnStateExited));
 	}
 
 	public override void _Process(double delta)
@@ -63,7 +63,7 @@ public abstract partial class SuperconStateComponent : Node2D
 	// METHODS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	private void OnStateEnter(SuperconStateMachine.Transition transition)
+	private void OnStateEntered(SuperconStateMachine.Transition transition)
 	{
 		if (this.Enabled && this.CanProcess())
 		{
@@ -71,7 +71,7 @@ public abstract partial class SuperconStateComponent : Node2D
 		}
 	}
 
-	private void OnStateExit(SuperconStateMachine.Transition transition)
+	private void OnStateExited(SuperconStateMachine.Transition transition)
 	{
 		if (this.Enabled && this.CanProcess())
 		{
