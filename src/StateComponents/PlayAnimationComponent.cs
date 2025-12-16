@@ -5,7 +5,7 @@ using Godot;
 namespace Raele.Supercon2D.StateComponents;
 
 [Tool]
-public partial class AnimationComponent : SuperconStateComponent
+public partial class PlayAnimationComponent : SuperconStateComponent
 {
 	// -----------------------------------------------------------------------------------------------------------------
 	// STATICS
@@ -66,7 +66,6 @@ public partial class AnimationComponent : SuperconStateComponent
 	public enum PlayWhenEnum :  byte
 	{
 		StateEnter = 1,
-		StateExit = 2,
 		ExpressionIsTrue = 3,
 	}
 
@@ -104,7 +103,7 @@ public partial class AnimationComponent : SuperconStateComponent
 			this.TimingExpressionParser = new();
 			if (this.TimingExpressionParser.Parse(this.TimingExpression, ["context"]) is Error error && error != Error.Ok)
 			{
-				GD.PrintErr($"[{nameof(AnimationComponent)} at {this.GetPath()}] Error parsing expression. Error: {error}");
+				GD.PrintErr($"[{nameof(PlayAnimationComponent)} at {this.GetPath()}] Error parsing expression. Error: {error}");
 				this.TimingExpressionParser = null;
 			}
 		}
@@ -165,15 +164,6 @@ public partial class AnimationComponent : SuperconStateComponent
 		}
 	}
 
-	public override void _SuperconExit(SuperconStateMachine.Transition transition)
-	{
-		base._SuperconExit(transition);
-		if (this.TimingPlayWhen == PlayWhenEnum.StateExit)
-		{
-			this.Activate();
-		}
-	}
-
 	public override void _SuperconProcess(double delta)
 	{
 		base._SuperconProcess(delta);
@@ -224,12 +214,12 @@ public partial class AnimationComponent : SuperconStateComponent
 		}
 		catch (Exception e)
 		{
-			GD.PrintErr($"[{nameof(AnimationComponent)} at {this.GetPath()}] Exception while evaluating timing expression. Exception: {e}");
+			GD.PrintErr($"[{nameof(PlayAnimationComponent)} at {this.GetPath()}] Exception while evaluating timing expression. Exception: {e}");
 			return false;
 		}
 		if (result.VariantType != Variant.Type.Bool)
 		{
-			GD.PrintErr($"[{nameof(AnimationComponent)} at {this.GetPath()}] Timing expression did not evaluate to a boolean. Returned value: {result} ({result.VariantType})");
+			GD.PrintErr($"[{nameof(PlayAnimationComponent)} at {this.GetPath()}] Timing expression did not evaluate to a boolean. Returned value: {result} ({result.VariantType})");
 			return false;
 		}
 		if (!result.AsBool())
