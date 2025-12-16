@@ -9,6 +9,12 @@ namespace Raele.Supercon2D;
 public partial class SuperconBody2D : CharacterBody2D
 {
 	// -----------------------------------------------------------------------------------------------------------------
+	// STATICs
+	// -----------------------------------------------------------------------------------------------------------------
+
+	public static readonly Vector2 DEFAULT_GROUNDED_FACING_DIRECTION = Vector2.Right;
+
+	// -----------------------------------------------------------------------------------------------------------------
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------
 
@@ -32,7 +38,7 @@ public partial class SuperconBody2D : CharacterBody2D
 	/// is facing at its resting pose. It will be used as a reference to calculate the rotation needed to make the
 	/// FacingNode face the direction specified by the FacingDirection property.
 	/// </summary>
-	[Export] public Vector2 ForwardDirection;
+	[Export] public Vector2 RestDirection = Vector2.Down;
 	/// <summary>
 	/// If this field is set to a Sprite2D or AnimatedSprote2D, the sprite will be flipped horizontally when the
 	/// character is facing left.
@@ -65,8 +71,8 @@ public partial class SuperconBody2D : CharacterBody2D
 			get;
 			set => field
 				= this.MotionMode == MotionModeEnum.Grounded ? Vector2.Right * Math.Sign(value.X)
-				: value.IsEqualApprox(Vector2.Zero) ? Vector2.Zero
-				: value.Normalized();
+					: value.IsEqualApprox(Vector2.Zero) ? Vector2.Zero
+					: value.Normalized();
 		}
 		= Vector2.Zero;
 
@@ -114,8 +120,15 @@ public partial class SuperconBody2D : CharacterBody2D
 	public override void _Ready()
 	{
 		base._Ready();
+		this.FacingDirection = this.MotionMode == MotionModeEnum.Grounded ? DEFAULT_GROUNDED_FACING_DIRECTION
+			: this.MotionMode == MotionModeEnum.Floating ? this.RestDirection
+			: Vector2.Zero;
 		if (Engine.IsEditorHint())
 		{
+			if (this.DefaultState == null)
+			{
+				this.DefaultState = this.GetChildren().OfType<SuperconState>().FirstOrDefault();
+			}
 			return;
 		}
 		this.ResetState();
@@ -130,14 +143,7 @@ public partial class SuperconBody2D : CharacterBody2D
 	{
 		if (Engine.IsEditorHint())
 		{
-			if (this.DefaultState == null)
-			{
-				this.DefaultState = this.GetChildren().OfType<SuperconState>().FirstOrDefault();
-			}
-			else
-			{
-				this.SetProcess(false);
-			}
+			this.SetProcess(false);
 			return;
 		}
 		base._Process(delta);
@@ -163,7 +169,7 @@ public partial class SuperconBody2D : CharacterBody2D
 		base._ValidateProperty(property);
 		switch (property["name"].AsString())
 		{
-			case nameof(this.ForwardDirection):
+			case nameof(this.RestDirection):
 				property["usage"] = this.MotionMode == MotionModeEnum.Floating
 					? (long) PropertyUsageFlags.Default
 					: (long) PropertyUsageFlags.None;
@@ -195,13 +201,24 @@ public partial class SuperconBody2D : CharacterBody2D
 		{
 			if (this.MotionMode == MotionModeEnum.Grounded)
 			{
-				this.FacingNode.Scale = this.HorizontalFacingDirection != 0
-					? new Vector2(this.HorizontalFacingDirection, 1)
-					: Vector2.Right;
+				// Godot doesn't directly support negative scaling, but we can achieve the same effect by directly
+				// modifying the transform matrix. Note that, since we manipulated the transform directly, the Scale and
+				// Rotation accessor properties will return incorrect values while the transform is flipped.
+				// Specifically, Scale.X will be 1, Scale.Y will be -1, and Rotation will be 2*Pi. Besides the fact that
+				// those properties become unreliable, the sprite is flipped correctly and child transforms are affected
+				// as expected, so it seems to work fine.
+				float scaleX = this.HorizontalFacingDirection == 0 ? 1 : this.HorizontalFacingDirection;
+				float scaleY = 1;
+				// This operation overrides scale, rotation, and skew of the transform, but translation is preserved.
+				this.FacingNode.Transform = this.FacingNode.Transform with
+				{
+					X = new Vector2(scaleX, 0),
+					Y = new Vector2(0, scaleY),
+				};
 			}
 			else if (this.MotionMode == MotionModeEnum.Floating)
 			{
-				this.FacingNode.Rotation = this.FacingDirection.Angle() - this.ForwardDirection.Angle();
+				this.FacingNode.Rotation = this.FacingDirection.Angle() - this.RestDirection.Angle();
 			}
 		}
 		this.FlipSpriteH?.Set("flip_h", this.HorizontalFacingDirection < 0);
