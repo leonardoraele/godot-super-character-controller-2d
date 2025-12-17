@@ -182,6 +182,11 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 				break;
 			case nameof(this.SectioningStartTimeSec):
 			case nameof(this.SectioningEndTimeSec):
+				float? length = this.AnimationPlayer?.HasAnimation(this.Animation) == true
+					? this.AnimationPlayer.GetAnimation(this.Animation).GetLength()
+					: null;
+				property["hint"] = length.HasValue ? (long) PropertyHint.Range : (long) PropertyHint.None;
+				property["hint_string"] = length.HasValue ? FormattableString.Invariant($"0,{length:N},0.01,suffix:s") : "";
 				property["usage"] = !this.SectioningUseMarkers
 					? (long) PropertyUsageFlags.Default
 					: (long) PropertyUsageFlags.NoEditor;
