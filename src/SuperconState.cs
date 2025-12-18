@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 namespace Raele.Supercon2D;
@@ -60,6 +62,11 @@ public partial class SuperconState : Node2D, SuperconStateMachine.IState
 	// {
 	// 	base._PhysicsProcess(delta);
 	// }
+
+	public override string[] _GetConfigurationWarnings()
+		=> new List<string>()
+			.Concat(this.GetParentOrNull<SuperconBody2D>() == null ? [$"{nameof(SuperconState)} must be a child of a {nameof(SuperconBody2D)} node."] : [])
+			.ToArray();
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// METHODS

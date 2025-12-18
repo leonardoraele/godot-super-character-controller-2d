@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
@@ -313,7 +312,7 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 		{
 			this.AnimationPlayer?.Play(
 				this.Animation,
-				customBlend: this.BlendEnabled ? this.BlendTimeMs * this.PlayBackwardsInt : default,
+				customBlend: this.BlendEnabled ? this.BlendTimeMs * this.PlayBackwardsInt : -1,
 				customSpeed: this.SpeedScale * this.PlayBackwardsInt,
 				fromEnd: this.PlayBackwards
 			);

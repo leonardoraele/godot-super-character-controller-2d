@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 namespace Raele.Supercon2D.StateComponents;
@@ -71,6 +73,11 @@ public abstract partial class SuperconStateComponent : Node2D
 			this._SuperconPhysicsProcess(delta);
 		}
 	}
+
+	public override string[] _GetConfigurationWarnings()
+		=> new List<string>()
+			.Concat(this.GetParentOrNull<SuperconState>() == null ? [$"{nameof(SuperconStateComponent)} must be a child of a {nameof(SuperconState)} node."] : [])
+			.ToArray();
 
 	public virtual void _SuperconEnter(SuperconStateMachine.Transition transition) { }
 	public virtual void _SuperconExit(SuperconStateMachine.Transition transition) { }
