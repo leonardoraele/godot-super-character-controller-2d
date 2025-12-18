@@ -1,5 +1,6 @@
 using Godot;
 using Godot.Collections;
+using Raele.GodotUtils.StateMachine;
 using System;
 using System.Linq;
 
@@ -50,6 +51,10 @@ public partial class SuperconBody2D : CharacterBody2D
 	// /// character's facing direction.
 	// /// </summary>
 	// [Export] public bool TransformFollowsFacingDirection = false;
+
+	[ExportGroup("Debug", "Debug")]
+	[Export] public bool DebugPrintStateChanges = false;
+	[Export] public MouseButton DebugTeleportToMouse = MouseButton.None;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// SIGNALS
@@ -117,6 +122,18 @@ public partial class SuperconBody2D : CharacterBody2D
 	// GODOT EVENTS
 	// -----------------------------------------------------------------------------------------------------------------
 
+	public override void _EnterTree()
+	{
+		base._EnterTree();
+		this.StateMachine.TransitionCompleted += this.OnStateTransitionCompleted;
+	}
+
+	public override void _ExitTree()
+	{
+		base._ExitTree();
+		this.StateMachine.TransitionCompleted -= this.OnStateTransitionCompleted;
+	}
+
 	public override void _Ready()
 	{
 		base._Ready();
@@ -132,11 +149,6 @@ public partial class SuperconBody2D : CharacterBody2D
 			return;
 		}
 		this.ResetState();
-		this.StateMachine.TransitionCompleted += transition =>
-		{
-			GD.PrintS(Time.GetTicksMsec(), $"[{nameof(SuperconBody2D)}] 🔀 State changed: {transition.StateOut?.Name ?? "<null>"} → {transition.StateIn?.Name ?? "<null>"}");
-			this.EmitSignalStateChanged(transition.StateIn, transition.StateOut);
-		};
 	}
 
 	public override void _Process(double delta)
@@ -151,6 +163,7 @@ public partial class SuperconBody2D : CharacterBody2D
 		this.UpdateLastOnFloorPosition();
 		this.UpdateFacing();
 		this.UpdateContactTrackers(delta);
+		this.UpdateDebugTeleportToMouse();
 	}
 
 	public override void _PhysicsProcess(double delta)
@@ -229,6 +242,27 @@ public partial class SuperconBody2D : CharacterBody2D
 		this.TimeOnFloor = this.IsOnFloor() ? this.TimeOnFloor + TimeSpan.FromSeconds(delta) : TimeSpan.Zero;
 		this.TimeOnCeiling = this.IsOnCeiling() ? this.TimeOnCeiling + TimeSpan.FromSeconds(delta) : TimeSpan.Zero;
 		this.TimeOnWall = this.IsOnWall() ? this.TimeOnWall + TimeSpan.FromSeconds(delta) : TimeSpan.Zero;
+	}
+
+	private void UpdateDebugTeleportToMouse()
+	{
+		if (
+			OS.IsDebugBuild()
+			&& this.DebugTeleportToMouse != MouseButton.None
+			&& Input.IsMouseButtonPressed(this.DebugTeleportToMouse)
+		)
+		{
+			this.GlobalPosition = this.GetGlobalMousePosition();
+			this.Velocity = Vector2.Zero;
+		}
+	}
+
+	private void OnStateTransitionCompleted(StateMachine<SuperconState>.Transition transition)
+	{
+		if (this.DebugPrintStateChanges) {
+			GD.PrintS(Time.GetTicksMsec(), $"[{nameof(SuperconBody2D)}] 🔀 State changed: {transition.StateOut?.Name ?? "<null>"} → {transition.StateIn?.Name ?? "<null>"}");
+		}
+		this.EmitSignalStateChanged(transition.StateIn, transition.StateOut);
 	}
 
 	/// <summary>
