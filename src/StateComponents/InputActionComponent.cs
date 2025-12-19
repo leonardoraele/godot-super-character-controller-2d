@@ -17,13 +17,6 @@ public partial class InputActionComponent : SuperconStateComponent
 		InputIsReleased,
 	}
 
-	public enum AbilityCancelingMode
-	{
-		Never,
-		OnRelease,
-		OnToggle,
-	}
-
 	// -----------------------------------------------------------------------------------------------------------------
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------

@@ -2,6 +2,7 @@ using Godot;
 using Godot.Collections;
 using Raele.GodotUtils.StateMachine;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Raele.Supercon2D;
@@ -25,7 +26,8 @@ public partial class SuperconBody2D : CharacterBody2D
 		set;
 	}
 
-	[Export] public SuperconState? DefaultState;
+	[Export] public SuperconState? DefaultState
+		{ get; set { field = value; this.UpdateConfigurationWarnings(); } }
 
 	[ExportGroup("Facing")]
 	/// <summary>
@@ -176,6 +178,11 @@ public partial class SuperconBody2D : CharacterBody2D
 		base._PhysicsProcess(delta);
 		this.CallDeferred(MethodName.MoveAndSlide);
 	}
+
+	public override string[] _GetConfigurationWarnings()
+		=> new List<string>()
+			.Concat(this.DefaultState == null ? [$"{nameof(this.DefaultState)} is not set. The character will not have a default state to start from."] : [])
+			.ToArray();
 
 	public override void _ValidateProperty(Dictionary property)
 	{

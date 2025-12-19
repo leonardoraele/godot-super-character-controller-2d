@@ -19,7 +19,8 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	[Export] public AnimationPlayer? AnimationPlayer;
+	[Export] public AnimationPlayer? AnimationPlayer
+		{ get; set { field = value; this.UpdateConfigurationWarnings(); }}
 	[Export(PropertyHint.Enum)] public string Animation = "";
 	[Export] public ResetStrategyEnum ResetStrategy = ResetStrategyEnum.BeforePlay;
 
@@ -147,10 +148,10 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 	// 	base._PhysicsProcess(delta);
 	// }
 
-	// public override string[] _GetConfigurationWarnings()
-	// 	=> new List<string>()
-	// 		.Concat(true ? [] : ["Some warning"])
-	// 		.ToArray();
+	public override string[] _GetConfigurationWarnings()
+		=> new List<string>()
+			.Concat(this.AnimationPlayer == null ? [$"Mandatory field {nameof(this.AnimationPlayer)} is not assigned."] : [])
+			.ToArray();
 
 	public override void _ValidateProperty(Godot.Collections.Dictionary property)
 	{
