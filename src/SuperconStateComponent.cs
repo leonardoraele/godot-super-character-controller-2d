@@ -13,24 +13,26 @@ public abstract partial class SuperconStateComponent : Node2D
 	// -----------------------------------------------------------------------------------------------------------------
 
 	[Export] public bool Enabled = true;
+
+	[ExportGroup("Process Constraints")]
 	/// <summary>
 	/// Time in miliseconds from to start this component after the character has switched to this state.
 	/// </summary>
-	[Export] public float StartDelayMs = 0f;
+	[Export(PropertyHint.None, "suffix:ms")] public float StartDelay = 0f;
 	/// <summary>
 	/// Time in miliseconds from to stop this component after it has started.
 	/// </summary>
-	[Export] public float MaxProcessDurationMs = float.PositiveInfinity;
+	[Export(PropertyHint.None, "suffix:ms")] public float MaxProcessDuration = float.PositiveInfinity;
 	/// <summary>
 	/// If this array is not empty, this component only starts if the SuperconCharacterBody2D has switched to this state
 	/// from one of the listed ones.
 	/// </summary>
-	[Export] public Godot.Collections.Array<SuperconState>? PreviousStateAllowlist;
+	[Export] public Godot.Collections.Array<SuperconState> PreviousStateAllowlist = [];
 	/// <summary>
 	/// This component won't start if the SuperconCharacterBody2D has switched to this state from one of the listed
 	/// ones.
 	/// </summary>
-	[Export] public Godot.Collections.Array<SuperconState>? PreviousStateForbidlist;
+	[Export] public Godot.Collections.Array<SuperconState> PreviousStateForbidlist = [];
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// PROPERTIES
@@ -44,8 +46,8 @@ public abstract partial class SuperconStateComponent : Node2D
 	private bool Started = false;
 	private bool ShouldProcess =>
 		this.Enabled
-		&& this.State.ActiveDurationMs >= this.StartDelayMs
-		&& this.State.ActiveDurationMs < this.StartDelayMs + this.MaxProcessDurationMs
+		&& this.State.ActiveDurationMs >= this.StartDelay
+		&& this.State.ActiveDurationMs < this.StartDelay + this.MaxProcessDuration
 		&& (
 			this.StateMachine.PreviousActiveState == null
 			|| this.PreviousStateAllowlist?.Contains(this.StateMachine.PreviousActiveState) != false
@@ -132,7 +134,7 @@ public abstract partial class SuperconStateComponent : Node2D
 	{
 		this.Started = false;
 		this._SuperconEnter(transition);
-		if (Mathf.IsZeroApprox(this.StartDelayMs) && this.Enabled)
+		if (Mathf.IsZeroApprox(this.StartDelay) && this.Enabled)
 		{
 			this.Start();
 		}

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
-using Raele.GodotUtils.StateMachine;
 
 namespace Raele.Supercon2D.StateComponents;
 
@@ -21,8 +20,8 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 
 	[Export] public AnimationPlayer? AnimationPlayer
 		{ get; set { field = value; this.UpdateConfigurationWarnings(); }}
-	[Export(PropertyHint.Enum)] public string Animation = "";
-	[Export] public ResetStrategyEnum ResetStrategy = ResetStrategyEnum.BeforePlay;
+	[Export] public string Animation = "";
+	[Export] public ResetStrategyEnum ResetStrategy = ResetStrategyEnum.Never;
 
 	[ExportGroup("Playback Options")]
 	[Export(PropertyHint.Range, "0.05,8,or_greater,or_less")] public float SpeedScale = 1f;
@@ -31,10 +30,10 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 	[ExportSubgroup("Sectioning", "Sectioning")]
 	[Export(PropertyHint.GroupEnable)] public bool SectioningEnabled = false;
 	[Export] public bool SectioningUseMarkers = false;
-	[Export(PropertyHint.None, "suffix:s")] public float SectioningStartTimeSec = 0f;
-	[Export(PropertyHint.None, "suffix:s")] public float SectioningEndTimeSec = 0f;
-	[Export(PropertyHint.Enum)] public string SectioningStartMarker = "";
-	[Export(PropertyHint.Enum)] public string SectioningEndMarker = "";
+	[Export] public float SectioningStartTimeSec = 0f;
+	[Export] public float SectioningEndTimeSec = 0f;
+	[Export] public string SectioningStartMarker = "";
+	[Export] public string SectioningEndMarker = "";
 
 	[ExportGroup("Queueing")]
 	[Export(PropertyHint.ArrayType)] public string[]? QueueAnimations;
@@ -49,8 +48,10 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 	[Export] public Variant TimingParamVar = new Variant();
 	[Export(PropertyHint.Expression)] public string TimingExpression = "";
 
-	[ExportGroup("State Transition", "Transition")]
-	[Export] public SuperconState? TransitionOnAnimationFinished = null;
+	[ExportGroup("State Transition")]
+	[ExportToolButton("Connect State Transition On Animation Finished")]
+	public Callable ConnectStateTransitionOnAnimationFinishedToolButton
+		=> Callable.From(this.OnConnectStateTransitionOnAnimationFinishedToolButtonPressed);
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// FIELDS
@@ -84,7 +85,16 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 	// SIGNALS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	// [Signal] public delegate void EventHandler()
+	[Signal] public delegate void PlayAnimationEventHandler(
+		string animationName,
+		Variant start,
+		Variant end,
+		double customBlend,
+		float customSpeed,
+		bool fromEnd
+	);
+	[Signal] public delegate void QueueAnimationEventHandler(string animationName);
+	[Signal] public delegate void AnimationFinishedEventHandler();
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// INTERNAL TYPES
@@ -157,23 +167,42 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 				property["usage"] = (long) PropertyUsageFlags.Default | (long) PropertyUsageFlags.UpdateAllIfModified;
 				break;
 			case nameof(this.Animation): {
-				string[] options = this.AnimationPlayer?.GetAnimationList() ?? [];
-				property["hint_string"] = options.Join(",");
-				property["usage"] = (long) PropertyUsageFlags.Default | (long) PropertyUsageFlags.UpdateAllIfModified;
-				if (!options.Contains(this.Animation))
+				if (this.AnimationPlayer != null)
 				{
-					this.Animation = "";
+					string[] options = this.AnimationPlayer?.GetAnimationList() ?? [];
+					property["hint"] = (long) PropertyHint.Enum;
+					property["hint_string"] = options.Join(",");
+					property["usage"] = (long) PropertyUsageFlags.Default | (long) PropertyUsageFlags.UpdateAllIfModified;
+					if (!options.Contains(this.Animation))
+					{
+						this.Animation = "";
+					}
 				}
 				break;
 			} case nameof(this.QueueAnimations): {
-				string[] options = this.AnimationPlayer?.GetAnimationList() ?? [];
-				string optionsStr = options.Join(",");
-				property["hint_string"] = $"String/{PropertyHint.Enum:D}:{optionsStr}";
-				this.QueueAnimations = this.QueueAnimations?.Where(a => options.Contains(a)).ToArray() ?? [];
-				return;
+				if (this.AnimationPlayer != null)
+				{
+					string[] options = this.AnimationPlayer?.GetAnimationList() ?? [];
+					string optionsStr = options.Join(",");
+					property["hint_string"] = $"String/{PropertyHint.Enum:D}:{optionsStr}";
+					this.QueueAnimations = this.QueueAnimations?.Where(a => options.Contains(a)).ToArray() ?? [];
+				}
+				else
+				{
+					property["hint_string"] = $"String/String";
+				}
+				break;
 			}
 			case nameof(this.SectioningUseMarkers):
-				property["usage"] = (long) PropertyUsageFlags.Default | (long) PropertyUsageFlags.UpdateAllIfModified;
+				if (this.AnimationPlayer != null)
+				{
+					property["usage"] = (long) PropertyUsageFlags.Default | (long) PropertyUsageFlags.UpdateAllIfModified;
+				}
+				else
+				{
+					property["usage"] = (long) PropertyUsageFlags.NoEditor;
+					this.SectioningUseMarkers = false;
+				}
 				break;
 			case nameof(this.SectioningStartTimeSec):
 			case nameof(this.SectioningEndTimeSec):
@@ -181,36 +210,23 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 					? this.AnimationPlayer.GetAnimation(this.Animation).GetLength()
 					: null;
 				property["hint"] = length.HasValue ? (long) PropertyHint.Range : (long) PropertyHint.None;
-				property["hint_string"] = length.HasValue ? FormattableString.Invariant($"0,{length:N},0.01,suffix:s") : "";
+				property["hint_string"] = length.HasValue ? FormattableString.Invariant($"0,{length:N},0.01,suffix:s") : "suffix:s";
 				property["usage"] = !this.SectioningUseMarkers
 					? (long) PropertyUsageFlags.Default
 					: (long) PropertyUsageFlags.NoEditor;
 				break;
 			case nameof(this.SectioningStartMarker):
 			case nameof(this.SectioningEndMarker):
-				string[] markerNames = this.AnimationPlayer?.HasAnimation(this.Animation) == true
-					? this.AnimationPlayer.GetAnimation(this.Animation).GetMarkerNames()
-					: [];
-				property["hint"] = markerNames.Length > 0 ? (long) PropertyHint.Enum : (long) PropertyHint.None;
-				property["hint_string"] = markerNames.Join(",");
 				property["usage"] = this.SectioningUseMarkers
 					? (long) PropertyUsageFlags.Default
 					: (long) PropertyUsageFlags.NoEditor;
-				if (
-					markerNames.Length > 0
-					&& !string.IsNullOrEmpty(this.SectioningStartMarker)
-					&& !markerNames.Contains(this.SectioningStartMarker)
-				)
+				if (this.AnimationPlayer?.HasAnimation(this.Animation) == true)
 				{
-					this.SectioningStartMarker = "";
-				}
-				else if (
-					markerNames.Length > 0
-					&& !string.IsNullOrEmpty(this.SectioningEndMarker)
-					&& !markerNames.Contains(this.SectioningEndMarker)
-				)
-				{
-					this.SectioningEndMarker = "";
+					string[] markerNames = this.AnimationPlayer.GetAnimation(this.Animation).GetMarkerNames();
+					property["hint"] = (long) PropertyHint.Enum;
+					property["hint_string"] = markerNames.Join(",");
+					if (!markerNames.Contains(this.SectioningStartMarker)) this.SectioningStartMarker = "";
+					if (!markerNames.Contains(this.SectioningEndMarker)) this.SectioningEndMarker = "";
 				}
 				break;
 			case nameof(this.TimingStrategy):
@@ -279,44 +295,26 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 			this.AnimationPlayer?.Advance(0f); // Force reset immediately
 		}
 
-		if (this.SectioningEnabled)
-		{
-			if (this.SectioningUseMarkers)
-			{
-				this.AnimationPlayer?.PlaySectionWithMarkers(
-					this.Animation,
-					startMarker: this.SectioningStartMarker,
-					endMarker: this.SectioningEndMarker,
-					customBlend: this.BlendEnabled ? this.BlendTimeMs * this.PlayBackwardsInt : default,
-					customSpeed: this.SpeedScale * this.PlayBackwardsInt,
-					fromEnd: this.PlayBackwards
-				);
-			}
-			else
-			{
-				this.AnimationPlayer?.PlaySection(
-					this.Animation,
-					startTime: this.SectioningStartTimeSec,
-					endTime: this.SectioningEndTimeSec,
-					customBlend: this.BlendEnabled ? this.BlendTimeMs * this.PlayBackwardsInt : default,
-					customSpeed: this.SpeedScale * this.PlayBackwardsInt,
-					fromEnd: this.PlayBackwards
-				);
-			}
-		}
-		else
-		{
-			this.AnimationPlayer?.Play(
-				this.Animation,
-				customBlend: this.BlendEnabled ? this.BlendTimeMs * this.PlayBackwardsInt : -1,
-				customSpeed: this.SpeedScale * this.PlayBackwardsInt,
-				fromEnd: this.PlayBackwards
-			);
-		}
+		Variant start = this.SectioningEnabled
+			? this.SectioningUseMarkers
+				? this.SectioningStartMarker
+				: this.SectioningStartTimeSec
+			: -1f;
+		Variant end = this.SectioningEnabled
+			? this.SectioningUseMarkers
+				? this.SectioningEndMarker
+				: this.SectioningEndTimeSec
+			: -1f;
+		double customBlend = this.BlendEnabled ? this.BlendTimeMs * this.PlayBackwardsInt : -1;
+		float customSpeed = this.SpeedScale * this.PlayBackwardsInt;
+
+		this.AnimationPlayer?.Call(AnimationPlayer.MethodName.Play, this.Animation, start, end, customBlend, customSpeed, this.PlayBackwards);
+		this.EmitSignalPlayAnimation(this.Animation, start, end, customBlend, customSpeed, this.PlayBackwards);
 
 		foreach (string animation in this.QueueAnimations ?? [])
 		{
 			this.AnimationPlayer?.Queue(animation);
+			this.EmitSignalQueueAnimation(animation);
 		}
 
 		this.AnimationActive = true;
@@ -386,9 +384,9 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 			this.AnimationPlayer?.Advance(0f); // Force reset immediately
 			this.AnimationPlayer?.Stop();
 		}
-		if (this.TransitionOnAnimationFinished != null)
-		{
-			this.StateMachine.QueueTransition(this.TransitionOnAnimationFinished);
-		}
+		this.EmitSignalAnimationFinished();
 	}
+
+	private void OnConnectStateTransitionOnAnimationFinishedToolButtonPressed()
+		=> this.ConnectStateTransition(SignalName.AnimationFinished);
 }

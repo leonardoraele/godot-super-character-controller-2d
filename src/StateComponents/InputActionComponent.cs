@@ -16,6 +16,10 @@ public partial class InputActionComponent : SuperconStateComponent
 	[Export] public string InputActionName = "";
 	[Export] public InputModeEnum InputMode = InputModeEnum.InputIsJustDown;
 
+	[ExportGroup("State Transition")]
+	[ExportToolButton("Connect State Transition")] public Callable ToolButtonConnectStateTransition
+		=> Callable.From(this.OnToolButtonConnectStateTransitionPressed);
+
 	[ExportGroup("Debug", "Debug")]
 	[Export] public bool DebugPrintTriggers = false;
 
@@ -78,4 +82,6 @@ public partial class InputActionComponent : SuperconStateComponent
 			InputModeEnum.InputIsReleased => !Input.IsActionPressed(this.InputActionName),
 			_ => false,
 		};
+
+	private void OnToolButtonConnectStateTransitionPressed() => this.ConnectStateTransition(SignalName.InputActionTriggered);
 }

@@ -99,7 +99,8 @@ public partial class SuperconState : Node2D, SuperconStateMachine.IState
 		}
 	}
 
-	public void QueueTransition(Variant data = default) => this.StateMachine.QueueTransition(this, data);
+	public void QueueTransition() => this.StateMachine.QueueTransition(this);
+	public void QueueTransition(Variant data) => this.StateMachine.QueueTransition(this, data);
 
 	private void ApplyResetVelocityOnEnter()
 	{
