@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using Godot.Collections;
@@ -19,6 +20,7 @@ public partial class SuperconDebugger : CanvasLayer
 	// -----------------------------------------------------------------------------------------------------------------
 
 	public SuperconBody2D Character => this.GetParent<SuperconBody2D>();
+	public string StateDescription => string.Join("/", this.GetActiveStates());
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// OVERRIDES
@@ -68,4 +70,19 @@ public partial class SuperconDebugger : CanvasLayer
 				break;
 		}
 	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	// OVERRIDES
+	// -----------------------------------------------------------------------------------------------------------------
+
+	private IEnumerable<string> GetActiveStates()
+	{
+		SuperconState? state = this.Character.ActiveState;
+		while (state != null)
+		{
+			yield return state.Name;
+			state = state is ISuperconStateMachineOwner owner ? owner.StateMachine.ActiveState : null;
+		}
+	}
 }
+

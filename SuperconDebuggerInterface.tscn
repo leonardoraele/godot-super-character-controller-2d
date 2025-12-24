@@ -40,16 +40,14 @@ func _process(delta: float) -> void:
 [sub_resource type="GDScript" id="GDScript_hhesw"]
 script/source = "extends Label
 
+@onready var debugger = $\"../../../..\".debugger
 @onready var character: SuperconBody2D = $\"../../../..\".character
 @onready var text_format: String = text
 
 func _process(delta: float) -> void:
 	text = text_format.format({
-		\"state\": get_state_name()
+		\"state\": debugger.StateDescription
 	})
-
-func get_state_name() -> String:
-	return character.ActiveState.name
 "
 
 [sub_resource type="GDScript" id="GDScript_fpan4"]

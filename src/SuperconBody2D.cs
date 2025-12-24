@@ -270,9 +270,9 @@ public partial class SuperconBody2D : CharacterBody2D, ISuperconStateMachineOwne
 	private void OnStateTransitionCompleted(StateMachine<SuperconState>.Transition transition)
 	{
 		if (this.DebugPrintStateChanges) {
-			GD.PrintS(Time.GetTicksMsec(), $"[{nameof(SuperconBody2D)}] 🔀 State changed: {transition.FromState?.Name ?? "<null>"} → {transition.IntoState?.Name ?? "<null>"}");
+			GD.PrintS(Time.GetTicksMsec(), $"[{nameof(SuperconBody2D)}] 🔀 State changed: {transition.ExitState?.Name ?? "<null>"} → {transition.EnterState?.Name ?? "<null>"}");
 		}
-		this.EmitSignalStateChanged(transition.IntoState, transition.FromState);
+		this.EmitSignalStateChanged(transition.EnterState, transition.ExitState);
 	}
 
 	/// <summary>
