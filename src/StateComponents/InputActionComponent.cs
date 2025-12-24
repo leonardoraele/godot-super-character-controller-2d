@@ -16,12 +16,12 @@ public partial class InputActionComponent : SuperconStateComponent
 	[Export] public string InputActionName = "";
 	[Export] public InputModeEnum InputMode = InputModeEnum.InputIsJustDown;
 
-	[ExportGroup("State Transition")]
-	[ExportToolButton("Connect State Transition")] public Callable ToolButtonConnectStateTransition
-		=> Callable.From(this.OnToolButtonConnectStateTransitionPressed);
-
 	[ExportGroup("Debug", "Debug")]
 	[Export] public bool DebugPrintTriggers = false;
+
+	[ExportCategory("🔀 Connect State Transitions")]
+	[ExportToolButton("On Action Triggered")] public Callable ConnectInputActionTriggeredToolButton
+		=> Callable.From(this.OnConnectInputActionTriggeredToolButtonPressed);
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// SIGNALS
@@ -51,7 +51,7 @@ public partial class InputActionComponent : SuperconStateComponent
 		{
 			if (this.DebugPrintTriggers)
 			{
-				GD.PrintS(Time.GetDatetimeStringFromSystem(), nameof(InputActionComponent), ":", "⚡", "Action triggered:", this.InputActionName);
+				GD.PrintS(Time.GetTimeStringFromSystem(), nameof(InputActionComponent), ":", "⚡", "Action triggered:", this.InputActionName);
 			}
 			this.EmitSignalInputActionTriggered();
 		}
@@ -78,10 +78,10 @@ public partial class InputActionComponent : SuperconStateComponent
 		=> !string.IsNullOrWhiteSpace(this.InputActionName) && this.InputMode switch
 		{
 			InputModeEnum.InputIsDown => Input.IsActionPressed(this.InputActionName),
-			InputModeEnum.InputIsJustDown => this.InputMapping.GetInputBuffer(this.InputActionName).ConsumeInput(),
+			InputModeEnum.InputIsJustDown => this.Character?.InputMapping.GetInputBuffer(this.InputActionName).ConsumeInput() == true,
 			InputModeEnum.InputIsReleased => !Input.IsActionPressed(this.InputActionName),
 			_ => false,
 		};
 
-	private void OnToolButtonConnectStateTransitionPressed() => this.ConnectStateTransition(SignalName.InputActionTriggered);
+	private void OnConnectInputActionTriggeredToolButtonPressed() => this.ConnectStateTransition(SignalName.InputActionTriggered);
 }

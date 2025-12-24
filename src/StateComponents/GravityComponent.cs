@@ -24,7 +24,7 @@ public partial class GravityComponent : SuperconStateComponent
 	// COMPUTED FIELDS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	public float GravityMultiplier => this.Character.Velocity.Dot(this.GravityDirection) < 0
+	public float GravityMultiplier => this.Character?.Velocity.Dot(this.GravityDirection) < 0
 		? this.AwayFromGravityMultiplier
 		: this.TowardGravityMultiplier;
 
@@ -42,7 +42,7 @@ public partial class GravityComponent : SuperconStateComponent
 	public override void _SuperconPhysicsProcess(double delta)
 	{
 		base._SuperconPhysicsProcess(delta);
-		this.Character.ApplyForce(
+		this.Character?.ApplyForce(
 			this.GravityDirection * this.GravityMagnitudePxPSecSq * (float) delta * this.GravityMultiplier,
 			this.MaxFallSpeed
 		);

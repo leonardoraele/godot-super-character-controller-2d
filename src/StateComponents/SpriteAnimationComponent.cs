@@ -39,8 +39,8 @@ public partial class SpriteAnimationComponent : SuperconStateComponent
 	{
 		FlipHEnum.Never => false,
 		FlipHEnum.Always => true,
-		FlipHEnum.IfFacingLeft => this.Character.HorizontalFacingDirection < 0,
-		FlipHEnum.IfFacingRight => this.Character.HorizontalFacingDirection > 0,
+		FlipHEnum.IfFacingLeft => this.Character?.HorizontalFacingDirection < 0,
+		FlipHEnum.IfFacingRight => this.Character?.HorizontalFacingDirection > 0,
 		_ => false,
 	};
 
@@ -88,7 +88,8 @@ public partial class SpriteAnimationComponent : SuperconStateComponent
 		base._Ready();
 		if (Engine.IsEditorHint())
 		{
-			this.AnimatedSprite ??= this.Character.GetChildren().OfType<AnimatedSprite2D>().FirstOrDefault();
+			this.AnimatedSprite ??= this.StateMachineOwner?.AsNode().GetChildren().OfType<AnimatedSprite2D>().FirstOrDefault();
+				this.Character?.GetChildren().OfType<AnimatedSprite2D>().FirstOrDefault();
 		}
 	}
 

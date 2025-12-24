@@ -6,16 +6,6 @@ namespace Raele.Supercon2D.StateComponents;
 public partial class SingleAxisControlComponent : SuperconStateComponent
 {
 	// -----------------------------------------------------------------------------------------------------------------
-	// LOCAL TYPES
-	// -----------------------------------------------------------------------------------------------------------------
-
-	public enum AxisEnum
-	{
-		Horizontal,
-		Vertical,
-	}
-
-	// -----------------------------------------------------------------------------------------------------------------
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------
 
@@ -35,28 +25,19 @@ public partial class SingleAxisControlComponent : SuperconStateComponent
 	// -----------------------------------------------------------------------------------------------------------------
 
 	// -----------------------------------------------------------------------------------------------------------------
-	// PROPERTIES
+	// COMPUTED PROPERTIES
 	// -----------------------------------------------------------------------------------------------------------------
 
-	private float AxisInput => this.Axis == AxisEnum.Horizontal ? this.InputMapping.MovementInput.X
-		: this.Axis == AxisEnum.Vertical ? this.InputMapping.MovementInput.Y
+	private float AxisInput => this.Character?.InputMapping == null ? 0
+		: this.Axis == AxisEnum.Horizontal ? this.Character.InputMapping.MovementInput.X
+		: this.Axis == AxisEnum.Vertical ? this.Character.InputMapping.MovementInput.Y
 		: 0f;
 	private float AxisVelocity
 	{
-		get => this.Axis == AxisEnum.Horizontal ? this.Character.Velocity.X
+		get => this.Character == null ? 0f
+			: this.Axis == AxisEnum.Horizontal ? this.Character.Velocity.X
 			: this.Axis == AxisEnum.Vertical ? this.Character.Velocity.Y
 			: 0f;
-		// set
-		// {
-		// 	if (this.Axis == AxisEnum.Horizontal)
-		// 	{
-		// 		this.Character.VelocityX = value;
-		// 	}
-		// 	else if (this.Axis == AxisEnum.Vertical)
-		// 	{
-		// 		this.Character.VelocityY = value;
-		// 	}
-		// }
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -64,23 +45,30 @@ public partial class SingleAxisControlComponent : SuperconStateComponent
 	// -----------------------------------------------------------------------------------------------------------------
 
 	// -----------------------------------------------------------------------------------------------------------------
-	// LIFECYCLE METHODS
+	// LOCAL TYPES
 	// -----------------------------------------------------------------------------------------------------------------
 
-	public override void _SuperconProcess(double delta)
+	public enum AxisEnum
 	{
-		base._SuperconProcess(delta);
-		if (this.FaceMovingDirection && Math.Abs(this.AxisVelocity) >= this.FaceMinSpeed)
-		{
-			this.Character.FacingDirection = this.Axis == AxisEnum.Horizontal
-				? Vector2.Right * Math.Sign(this.AxisVelocity)
-				: Vector2.Up * Math.Sign(this.AxisVelocity);
-		}
+		Horizontal,
+		Vertical,
 	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	// OVERRIDES
+	// -----------------------------------------------------------------------------------------------------------------
 
 	public override void _SuperconPhysicsProcess(double delta)
 	{
 		base._SuperconPhysicsProcess(delta);
+
+		if (this.FaceMovingDirection && Math.Abs(this.AxisVelocity) >= this.FaceMinSpeed)
+		{
+			this.Character?.FacingDirection = this.Axis == AxisEnum.Horizontal
+				? Vector2.Right * Math.Sign(this.AxisVelocity)
+				: Vector2.Up * Math.Sign(this.AxisVelocity);
+		}
+
 		float targetVelocity = this.AxisInput * this.MaxSpeedPxPSec;
 		float acceleration =
 			Math.Abs(targetVelocity) < Mathf.Epsilon ? this.SoftDecelerationPxPSecSqr
@@ -89,21 +77,21 @@ public partial class SingleAxisControlComponent : SuperconStateComponent
 				? this.HardDecelerationPxPSecSqr
 			: this.AccelerationPxPSecSqr;
 		this.AccelerateAxis(targetVelocity, acceleration, (float) delta);
-		// if (Math.Abs(targetVelocity) < Mathf.Epsilon)
-		// {
-		// 	this.Character.AxisVelocity *= this.DampMultiplierPFrame;
-		// }
 	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	// METHODS
+	// -----------------------------------------------------------------------------------------------------------------
 
 	private void AccelerateAxis(float targetVelocity, float acceleration, float delta)
 	{
 		if (this.Axis == AxisEnum.Horizontal)
 		{
-			this.Character.AccelerateX(targetVelocity, acceleration * delta);
+			this.Character?.AccelerateX(targetVelocity, acceleration * delta);
 		}
 		else if (this.Axis == AxisEnum.Vertical)
 		{
-			this.Character.AccelerateY(targetVelocity, acceleration * delta);
+			this.Character?.AccelerateY(targetVelocity, acceleration * delta);
 		}
 	}
 }

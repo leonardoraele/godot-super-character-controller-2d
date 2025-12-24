@@ -18,9 +18,9 @@ public partial class CustomTriggerComponent : SuperconStateComponent
 	[Export(PropertyHint.Expression)] public string Expression = "";
 	[Export] public bool PhysicsProcess = false;
 
-	[ExportGroup("State Transition")]
-	[ExportToolButton("Connect State Transition")] public Callable ToolButtonConnectStateTransition
-		=> Callable.From(this.OnToolButtonConnectStateTransitionPressed);
+	[ExportCategory("🔀 Connect State Transitions")]
+	[ExportToolButton("On Triggered")] public Callable ConnectTriggeredToolButton
+		=> Callable.From(this.OnConnectTriggeredToolButtonPressed);
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// FIELDS
@@ -43,7 +43,7 @@ public partial class CustomTriggerComponent : SuperconStateComponent
 		base._Ready();
 		if (Engine.IsEditorHint() && this.Context == null)
 		{
-			this.Context = this.Character;
+			this.Context = this.StateMachineOwner?.Character;
 		}
 		this.CompileExpression();
 	}
@@ -117,5 +117,5 @@ public partial class CustomTriggerComponent : SuperconStateComponent
 		return result.AsBool();
 	}
 
-	private void OnToolButtonConnectStateTransitionPressed() => this.ConnectStateTransition(SignalName.Triggered);
+	private void OnConnectTriggeredToolButtonPressed() => this.ConnectStateTransition(SignalName.Triggered);
 }

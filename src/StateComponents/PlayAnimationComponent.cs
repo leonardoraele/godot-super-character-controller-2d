@@ -18,13 +18,18 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	[Export] public AnimationPlayer? AnimationPlayer
-		{ get; set { field = value; this.UpdateConfigurationWarnings(); }}
 	[Export] public string Animation = "";
 	[Export] public ResetStrategyEnum ResetStrategy = ResetStrategyEnum.Never;
 
+	[ExportGroup("Custom Animation Player")]
+	[Export(PropertyHint.GroupEnable)] public bool CustomAnimationPlayerEnabled
+		{ get; set { field = value; this.NotifyPropertyListChanged(); } }
+		= false;
+	[Export] public AnimationPlayer? CustomAnimationPlayer
+		{ get; set { field = value; this.UpdateConfigurationWarnings(); }}
+
 	[ExportGroup("Playback Options")]
-	[Export(PropertyHint.Range, "0.05,8,or_greater,or_less")] public float SpeedScale = 1f;
+	[Export(PropertyHint.Range, "0.05,4,0.05,or_greater,or_less,suffix:x")] public float SpeedScale = 1f;
 	[Export] public bool PlayBackwards = false;
 
 	[ExportSubgroup("Sectioning", "Sectioning")]
@@ -48,10 +53,10 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 	[Export] public Variant TimingParamVar = new Variant();
 	[Export(PropertyHint.Expression)] public string TimingExpression = "";
 
-	[ExportGroup("State Transition")]
-	[ExportToolButton("Connect State Transition On Animation Finished")]
-	public Callable ConnectStateTransitionOnAnimationFinishedToolButton
-		=> Callable.From(this.OnConnectStateTransitionOnAnimationFinishedToolButtonPressed);
+	[ExportCategory("🔀 Connect State Transitions")]
+	[ExportToolButton("On Animation Finished")]
+	public Callable ConnectAnimationFinishedToolButton
+		=> Callable.From(this.OnConnectAnimationFinishedToolButtonPressed);
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// FIELDS
@@ -79,20 +84,17 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 	// COMPUTED PROPERTIES
 	// -----------------------------------------------------------------------------------------------------------------
 
+	public AnimationPlayer? AnimationPlayer => this.CustomAnimationPlayerEnabled
+		? this.CustomAnimationPlayer
+		: this.StateMachineOwner?.AsNode().GetChildren().OfType<AnimationPlayer>().FirstOrDefault()
+			?? this.Character?.GetChildren().OfType<AnimationPlayer>().FirstOrDefault();
 	private int PlayBackwardsInt => this.PlayBackwards ? -1 : 1;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// SIGNALS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	[Signal] public delegate void PlayAnimationEventHandler(
-		string animationName,
-		Variant start,
-		Variant end,
-		double customBlend,
-		float customSpeed,
-		bool fromEnd
-	);
+	[Signal] public delegate void PlayAnimationEventHandler(string animationName, double customBlend, float customSpeed, bool fromEnd);
 	[Signal] public delegate void QueueAnimationEventHandler(string animationName);
 	[Signal] public delegate void AnimationFinishedEventHandler();
 
@@ -132,11 +134,6 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 	public override void _Ready()
 	{
 		base._Ready();
-		if (Engine.IsEditorHint() && this.AnimationPlayer == null)
-		{
-			this.AnimationPlayer ??= this.Character.GetChildren().OfType<AnimationPlayer>().FirstOrDefault()
-				?? this.State.GetChildren().OfType<AnimationPlayer>().FirstOrDefault();
-		}
 		if (this.TimingStrategy == TimingStrategyEnum.WhenExpressionIsTrue)
 		{
 			this.CompileTimingExpression();
@@ -155,7 +152,11 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 
 	public override string[] _GetConfigurationWarnings()
 		=> new List<string>()
-			.Concat(this.AnimationPlayer == null ? [$"Mandatory field {nameof(this.AnimationPlayer)} is not assigned."] : [])
+			.Concat(
+				this.CustomAnimationPlayerEnabled && this.CustomAnimationPlayer == null
+					? [$"Mandatory field {nameof(this.CustomAnimationPlayer)} is not assigned."]
+					: []
+			)
 			.ToArray();
 
 	public override void _ValidateProperty(Godot.Collections.Dictionary property)
@@ -163,7 +164,8 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 		base._ValidateProperty(property);
 		switch (property["name"].AsString())
 		{
-			case nameof(this.AnimationPlayer):
+			case nameof(this.CustomAnimationPlayerEnabled):
+			case nameof(this.CustomAnimationPlayer):
 				property["usage"] = (long) PropertyUsageFlags.Default | (long) PropertyUsageFlags.UpdateAllIfModified;
 				break;
 			case nameof(this.Animation): {
@@ -295,21 +297,40 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 			this.AnimationPlayer?.Advance(0f); // Force reset immediately
 		}
 
-		Variant start = this.SectioningEnabled
-			? this.SectioningUseMarkers
-				? this.SectioningStartMarker
-				: this.SectioningStartTimeSec
-			: -1f;
-		Variant end = this.SectioningEnabled
-			? this.SectioningUseMarkers
-				? this.SectioningEndMarker
-				: this.SectioningEndTimeSec
-			: -1f;
 		double customBlend = this.BlendEnabled ? this.BlendTimeMs * this.PlayBackwardsInt : -1;
 		float customSpeed = this.SpeedScale * this.PlayBackwardsInt;
 
-		this.AnimationPlayer?.Call(AnimationPlayer.MethodName.Play, this.Animation, start, end, customBlend, customSpeed, this.PlayBackwards);
-		this.EmitSignalPlayAnimation(this.Animation, start, end, customBlend, customSpeed, this.PlayBackwards);
+		if (this.SectioningEnabled)
+		{
+			if (this.SectioningUseMarkers)
+			{
+				this.AnimationPlayer?.PlaySectionWithMarkers(
+					this.Animation,
+					this.SectioningStartMarker,
+					this.SectioningEndMarker,
+					customBlend,
+					customSpeed,
+					this.PlayBackwards
+				);
+			}
+			else
+			{
+				this.AnimationPlayer?.PlaySection(
+					this.Animation,
+					this.SectioningStartTimeSec,
+					this.SectioningEndTimeSec,
+					customBlend,
+					customSpeed,
+					this.PlayBackwards
+				);
+			}
+		}
+		else
+		{
+			this.AnimationPlayer?.Play(this.Animation, customBlend, customSpeed, this.PlayBackwards);
+		}
+
+		this.EmitSignalPlayAnimation(this.Animation, customBlend, customSpeed, this.PlayBackwards);
 
 		foreach (string animation in this.QueueAnimations ?? [])
 		{
@@ -387,6 +408,6 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 		this.EmitSignalAnimationFinished();
 	}
 
-	private void OnConnectStateTransitionOnAnimationFinishedToolButtonPressed()
+	private void OnConnectAnimationFinishedToolButtonPressed()
 		=> this.ConnectStateTransition(SignalName.AnimationFinished);
 }

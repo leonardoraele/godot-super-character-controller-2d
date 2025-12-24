@@ -8,7 +8,7 @@ using System.Linq;
 namespace Raele.Supercon2D;
 
 [Tool][GlobalClass]
-public partial class SuperconBody2D : CharacterBody2D
+public partial class SuperconBody2D : CharacterBody2D, ISuperconStateMachineOwner
 {
 	// -----------------------------------------------------------------------------------------------------------------
 	// STATICs
@@ -26,7 +26,7 @@ public partial class SuperconBody2D : CharacterBody2D
 		set;
 	}
 
-	[Export] public SuperconState? DefaultState
+	[Export] public SuperconState? RestState
 		{ get; set { field = value; this.UpdateConfigurationWarnings(); } }
 
 	[ExportGroup("Facing")]
@@ -87,7 +87,7 @@ public partial class SuperconBody2D : CharacterBody2D
 	public TimeSpan TimeOnFloor { get; private set; } = TimeSpan.Zero;
 	public TimeSpan TimeOnCeiling { get; private set; } = TimeSpan.Zero;
 	public TimeSpan TimeOnWall { get; private set; } = TimeSpan.Zero;
-	public SuperconStateMachine StateMachine = new();
+	public SuperconStateMachine StateMachine { get; } = new();
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// COMPUTED PROPERTIES
@@ -115,14 +115,17 @@ public partial class SuperconBody2D : CharacterBody2D
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	// GODOT EVENTS
+	// SIGNALS
 	// -----------------------------------------------------------------------------------------------------------------
 
 	[Signal] public delegate void StaeChangedEventHandler(SuperconState? newState, SuperconState? oldState);
 
 	// -----------------------------------------------------------------------------------------------------------------
-	// GODOT EVENTS
+	// OVERRIDES
 	// -----------------------------------------------------------------------------------------------------------------
+
+	Node ISuperconStateMachineOwner.AsNode() => this;
+	public ISuperconStateMachineOwner AsStateMachineOwner() => this;
 
 	public override void _EnterTree()
 	{
@@ -144,13 +147,13 @@ public partial class SuperconBody2D : CharacterBody2D
 			: Vector2.Zero;
 		if (Engine.IsEditorHint())
 		{
-			if (this.DefaultState == null)
+			if (this.RestState == null)
 			{
-				this.DefaultState = this.GetChildren().OfType<SuperconState>().FirstOrDefault();
+				this.RestState = this.GetChildren().OfType<SuperconState>().FirstOrDefault();
 			}
 			return;
 		}
-		this.ResetState();
+		this.AsStateMachineOwner().ResetState();
 	}
 
 	public override void _Process(double delta)
@@ -181,7 +184,7 @@ public partial class SuperconBody2D : CharacterBody2D
 
 	public override string[] _GetConfigurationWarnings()
 		=> new List<string>()
-			.Concat(this.DefaultState == null ? [$"{nameof(this.DefaultState)} is not set. The character will not have a default state to start from."] : [])
+			.Concat(this.RestState == null ? [$"{nameof(this.RestState)} is not set. The character will not have a default state to start from."] : [])
 			.ToArray();
 
 	public override void _ValidateProperty(Dictionary property)
@@ -376,13 +379,4 @@ public partial class SuperconBody2D : CharacterBody2D
 				(float) Math.Sin(Math.Atan2(direction.Y, direction.X))
 			)
 			.Abs();
-
-	// -----------------------------------------------------------------------------------------------------------------
-	// STATE MACHINE PROXY METHODS
-	// -----------------------------------------------------------------------------------------------------------------
-
-	public void ResetState() => this.StateMachine.QueueTransition(this.DefaultState);
-	public void QueueTransition(string stateName, Variant data = default)
-		=> this.StateMachine.QueueTransition(this.GetParent().GetNode(stateName) as SuperconState, data);
-	public void QueueTransition(SuperconState state, Variant data = default) => this.StateMachine.QueueTransition(state, data);
 }

@@ -78,9 +78,9 @@ public partial class AnimationParamComponent : SuperconStateComponent
 		base._Ready();
 		if (Engine.IsEditorHint())
 		{
-			this.AnimationTree ??= this.GetParent()?.GetChildren().OfType<AnimationTree>().FirstOrDefault()
+			this.AnimationTree ??= this.StateMachineOwner?.AsNode().GetChildren().OfType<AnimationTree>().FirstOrDefault()
 				?? this.Character?.GetChildren().OfType<AnimationTree>().FirstOrDefault();
-			this.TargetNode ??= this.Character;
+			this.TargetNode ??= this.StateMachineOwner?.Character;
 		}
 	}
 

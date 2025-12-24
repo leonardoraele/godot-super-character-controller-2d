@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -38,21 +39,17 @@ public abstract partial class SuperconStateComponent : Node2D
 	// PROPERTIES
 	// -----------------------------------------------------------------------------------------------------------------
 
-	public SuperconState State => field ??= this.GetParent<SuperconState>();
-	public SuperconBody2D Character => this.State.Character;
-	public SuperconInputMapping InputMapping => this.Character.InputMapping;
-	public SuperconStateMachine StateMachine => this.Character.StateMachine;
+	public SuperconState? State => this.GetParentOrNull<SuperconState>();
+	public ISuperconStateMachineOwner? StateMachineOwner => this.State?.StateMachineOwner;
+	public SuperconBody2D? Character => this.StateMachineOwner?.Character;
 
 	private bool Started = false;
 	private bool ShouldProcess =>
 		this.Enabled
-		&& this.State.ActiveDurationMs >= this.StartDelay
-		&& this.State.ActiveDurationMs < this.StartDelay + this.MaxProcessDuration
-		&& (
-			this.StateMachine.PreviousActiveState == null
-			|| this.PreviousStateAllowlist?.Contains(this.StateMachine.PreviousActiveState) != false
-			&& this.PreviousStateForbidlist?.Contains(this.StateMachine.PreviousActiveState) != true
-		);
+		&& (this.State?.ActiveDurationMs ?? 0f) >= this.StartDelay
+		&& (this.State?.ActiveDurationMs ?? 0f) < this.StartDelay + this.MaxProcessDuration
+		&& this.TestAllowlist()
+		&& this.TestForbidlist();
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// VIRTUALS & OVERRIDES
@@ -116,7 +113,11 @@ public abstract partial class SuperconStateComponent : Node2D
 
 	public override string[] _GetConfigurationWarnings()
 		=> new List<string>()
-			.Concat(this.GetParentOrNull<SuperconState>() == null ? [$"{nameof(SuperconStateComponent)} must be a child of a {nameof(SuperconState)} node."] : [])
+			.Concat(
+				this.Owner != this && this.GetParentOrNull<SuperconState>() == null
+					? [$"{this.GetType().Name} must be a direct child of a {nameof(SuperconState)} node."]
+					: []
+			)
 			.ToArray();
 
 	public virtual void _SuperconEnter(SuperconStateMachine.Transition transition) {}
@@ -167,11 +168,17 @@ public abstract partial class SuperconStateComponent : Node2D
 		try {
 			selectedState = await GeneralUtil.RequestSelectNode<SuperconState>();
 		} catch (TaskCanceledException) { return; } // User cancelled the operation. Nothing to do
-		this.Connect(
-			signalName,
-			new Callable(selectedState, SuperconState.MethodName.QueueTransition),
-			(uint) ConnectFlags.Persist
-		);
+		Callable callable = new Callable(selectedState, SuperconState.MethodName.QueueTransition);
+		this.Connect(signalName, callable, (uint) ConnectFlags.Persist);
 		EditorInterface.Singleton.EditNode(this);
 	}
+
+	private bool TestAllowlist()
+		=> this.StateMachineOwner?.StateMachine.PreviousActiveState == null
+			|| this.PreviousStateAllowlist.Count() == 0
+			|| this.PreviousStateAllowlist.Contains(this.StateMachineOwner.StateMachine.PreviousActiveState);
+
+	private bool TestForbidlist()
+		=> this.StateMachineOwner?.StateMachine.PreviousActiveState == null
+			|| !this.PreviousStateForbidlist.Contains(this.StateMachineOwner.StateMachine.PreviousActiveState);
 }

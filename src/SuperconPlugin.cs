@@ -10,7 +10,7 @@ public partial class SuperconPlugin : EditorPlugin
 	public override void _EnterTree()
 	{
 		Texture2D stateIcon = GD.Load<Texture2D>($"res://addons/{nameof(Supercon2D)}/icons/character_body_neutral.png");
-		// Texture2D genericStateIcon = GD.Load<Texture2D>($"res://addons/{nameof(Supercon2D)}/icons/character_body_bg.png");
+		Texture2D genericStateIcon = GD.Load<Texture2D>($"res://addons/{nameof(Supercon2D)}/icons/character_body_bg.png");
 		Texture2D gravityIcon = GD.Load<Texture2D>($"res://addons/{nameof(Supercon2D)}/icons/character_body_gravity.png");
 		Texture2D singleAxisControlIcon = GD.Load<Texture2D>($"res://addons/{nameof(Supercon2D)}/icons/character_body_single_axis_control.png");
 		Texture2D animatedSprite = GD.Load<Texture2D>($"res://addons/{nameof(Supercon2D)}/icons/character_body_animated_sprite_3.png");
@@ -28,6 +28,7 @@ public partial class SuperconPlugin : EditorPlugin
 		// Core Types
 		this.AddCustomType(nameof(SuperconBody2D), nameof(CharacterBody2D), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(SuperconBody2D)}.cs"), null);
 		this.AddCustomType(nameof(SuperconState), nameof(Node2D), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(SuperconState)}.cs"), stateIcon);
+		this.AddCustomType(nameof(SuperconStateLayer), nameof(Node2D), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(SuperconStateLayer)}.cs"), stateIcon);
 
 		// State Components
 		this.AddCustomType(nameof(PlayAnimationComponent), nameof(Node2D), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(PlayAnimationComponent)}.cs"), animationPlayIcon);
@@ -42,6 +43,7 @@ public partial class SuperconPlugin : EditorPlugin
 		this.AddCustomType(nameof(SingleAxisControlComponent), nameof(Node2D), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(SingleAxisControlComponent)}.cs"), singleAxisControlIcon);
 		this.AddCustomType(nameof(SlopeComponent), nameof(Node2D), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(SlopeComponent)}.cs"), slopeIcon);
 		this.AddCustomType(nameof(SpriteAnimationComponent), nameof(Node2D), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(SpriteAnimationComponent)}.cs"), animatedSprite);
+		this.AddCustomType(nameof(VelocityResetComponent), nameof(Node2D), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents)}/{nameof(VelocityResetComponent)}.cs"), genericStateIcon);
 	}
 
 	public override void _ExitTree()
@@ -61,6 +63,7 @@ public partial class SuperconPlugin : EditorPlugin
 		this.RemoveCustomType(nameof(SingleAxisControlComponent));
 		this.RemoveCustomType(nameof(SlopeComponent));
 		this.RemoveCustomType(nameof(SpriteAnimationComponent));
+		this.RemoveCustomType(nameof(VelocityResetComponent));
 	}
 }
 #endif

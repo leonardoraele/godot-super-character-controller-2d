@@ -12,7 +12,6 @@ public partial class SuperconState : Node2D, SuperconStateMachine.IState
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	[Export(PropertyHint.Flags, "X:1,Y:2")] public byte ResetVelocityOnEnter = 0;
 	[Export] public ProcessModeEnum ProcessModeWhenActive = ProcessModeEnum.Inherit;
 	[Export] public ProcessModeEnum ProcessModeWhenInactive = ProcessModeEnum.Disabled;
 
@@ -20,18 +19,19 @@ public partial class SuperconState : Node2D, SuperconStateMachine.IState
 	// FIELDS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	public SuperconBody2D Character => field ??= this.GetParent<SuperconBody2D>();
+	public ISuperconStateMachineOwner? StateMachineOwner => ISuperconStateMachineOwner.GetOrNull(this);
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// PROPERTIES
 	// -----------------------------------------------------------------------------------------------------------------
 
-	public bool IsActive => this.StateMachine.ActiveState == this;
-	public bool IsPreviousActiveState => this.StateMachine.PreviousActiveState == this;
-	public TimeSpan ActiveDuration => this.IsActive ? this.StateMachine.ActiveStateDuration : TimeSpan.Zero;
+	public bool IsActive => this.StateMachineOwner?.StateMachine.ActiveState == this;
+	public bool IsPreviousActiveState => this.StateMachineOwner?.StateMachine.PreviousActiveState == this;
+	public TimeSpan ActiveDuration => this.IsActive
+		? this.StateMachineOwner?.StateMachine.ActiveStateDuration ?? TimeSpan.Zero
+		: TimeSpan.Zero;
 	public double ActiveDurationMs => this.ActiveDuration.TotalMilliseconds;
-	public SuperconStateMachine StateMachine => this.Character.StateMachine;
-	public SuperconInputMapping InputMapping => this.Character.InputMapping;
+	public SuperconInputMapping? InputMapping => this.StateMachineOwner?.Character?.InputMapping;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// SIGNALS
@@ -63,10 +63,9 @@ public partial class SuperconState : Node2D, SuperconStateMachine.IState
 	// 	base._PhysicsProcess(delta);
 	// }
 
-	public override string[] _GetConfigurationWarnings()
-		=> new List<string>()
-			.Concat(this.GetParentOrNull<SuperconBody2D>() == null ? [$"{nameof(SuperconState)} must be a child of a {nameof(SuperconBody2D)} node."] : [])
-			.ToArray();
+	// public override string[] _GetConfigurationWarnings()
+	// 	=> new List<string>()
+	// 		.ToArray();
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// METHODS
@@ -79,7 +78,6 @@ public partial class SuperconState : Node2D, SuperconStateMachine.IState
 			return;
 		}
 		this.ProcessMode = this.ProcessModeWhenActive;
-		this.ApplyResetVelocityOnEnter();
 		this.EmitSignalStateEntered(transition);
 	}
 
@@ -99,18 +97,6 @@ public partial class SuperconState : Node2D, SuperconStateMachine.IState
 		}
 	}
 
-	public void QueueTransition() => this.StateMachine.QueueTransition(this);
-	public void QueueTransition(Variant data) => this.StateMachine.QueueTransition(this, data);
-
-	private void ApplyResetVelocityOnEnter()
-	{
-		if ((this.ResetVelocityOnEnter & 1) != 0)
-		{
-			this.Character.VelocityX = 0;
-		}
-		if ((this.ResetVelocityOnEnter & 2) != 0)
-		{
-			this.Character.VelocityY = 0;
-		}
-	}
+	public void QueueTransition() => this.StateMachineOwner?.StateMachine.QueueTransition(this);
+	public void QueueTransition(Variant data) => this.StateMachineOwner?.StateMachine.QueueTransition(this, data);
 }
