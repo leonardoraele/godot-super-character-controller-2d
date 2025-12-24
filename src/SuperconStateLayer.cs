@@ -11,6 +11,9 @@ public partial class SuperconStateLayer : SuperconState, ISuperconStateMachineOw
 
 	[Export] public SuperconState? RestState { get; set; }
 
+	[ExportGroup("Debug", "Debug")]
+	[Export] public bool DebugPrintStateChanges = false;
+
 	//------------------------------------------------------------------------------------------------------------------
 	// FIELDS
 	//------------------------------------------------------------------------------------------------------------------
@@ -18,7 +21,7 @@ public partial class SuperconStateLayer : SuperconState, ISuperconStateMachineOw
 	public SuperconStateMachine StateMachine { get; } = new();
 
 	//------------------------------------------------------------------------------------------------------------------
-	// PROPERTIES
+	// COMPUTED PROPERTIES
 	//------------------------------------------------------------------------------------------------------------------
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -26,8 +29,32 @@ public partial class SuperconStateLayer : SuperconState, ISuperconStateMachineOw
 	//------------------------------------------------------------------------------------------------------------------
 
 	//------------------------------------------------------------------------------------------------------------------
-	// GODOT EVENTS
+	// OVERRIDES
 	//------------------------------------------------------------------------------------------------------------------
+
+	public override void _EnterTree()
+	{
+		base._EnterTree();
+		if (Engine.IsEditorHint())
+		{
+			return;
+		}
+		this.StateEntered += this.OnStateEntered;
+		this.StateExited += this.OnStateExited;
+		this.StateMachine.TransitionCompleted += this.OnStateTransitionCompleted;
+	}
+
+	public override void _ExitTree()
+	{
+		base._ExitTree();
+		if (Engine.IsEditorHint())
+		{
+			return;
+		}
+		this.StateEntered -= this.OnStateEntered;
+		this.StateExited -= this.OnStateExited;
+		this.StateMachine.TransitionCompleted -= this.OnStateTransitionCompleted;
+	}
 
 	//------------------------------------------------------------------------------------------------------------------
 	// METHODS
@@ -35,4 +62,15 @@ public partial class SuperconStateLayer : SuperconState, ISuperconStateMachineOw
 
 	Node ISuperconStateMachineOwner.AsNode() => this;
 	public ISuperconStateMachineOwner AsStateMachineOwner() => this;
+
+	private void OnStateEntered(SuperconStateMachine.Transition transition)
+		=> this.AsStateMachineOwner().QueueTransition(this.RestState);
+	private void OnStateExited(SuperconStateMachine.Transition transition)
+		=> this.AsStateMachineOwner().Stop();
+	private void OnStateTransitionCompleted(SuperconStateMachine.Transition transition)
+	{
+		if (this.DebugPrintStateChanges) {
+			GD.PrintS(Time.GetTimeStringFromSystem(), $"[{nameof(SuperconStateLayer)}] 🔀 State changed: {transition.FromState?.Name ?? "<null>"} → {transition.IntoState?.Name ?? "<null>"}");
+		}
+	}
 }

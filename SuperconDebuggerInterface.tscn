@@ -45,8 +45,11 @@ script/source = "extends Label
 
 func _process(delta: float) -> void:
 	text = text_format.format({
-		\"state\": character.ActiveState.name
+		\"state\": get_state_name()
 	})
+
+func get_state_name() -> String:
+	return character.ActiveState.name
 "
 
 [sub_resource type="GDScript" id="GDScript_fpan4"]

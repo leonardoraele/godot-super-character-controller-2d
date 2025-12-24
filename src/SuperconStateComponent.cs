@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Godot;
+using Godot.Collections;
 
 namespace Raele.Supercon2D.StateComponents;
 
@@ -13,43 +14,69 @@ public abstract partial class SuperconStateComponent : Node2D
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	[Export] public bool Enabled = true;
+	[Export] public bool Enabled
+		{
+			get;
+			set
+			{
+				if (Engine.IsEditorHint())
+				{
+					this.ProcessMode = value ? ProcessModeEnum.Inherit : ProcessModeEnum.Disabled;
+				}
+				field = value;
+			}
+		}
+		= true;
 
-	[ExportGroup("Process Constraints")]
+	[ExportGroup("Process Constraints", "Process")]
 	/// <summary>
 	/// Time in miliseconds from to start this component after the character has switched to this state.
 	/// </summary>
-	[Export(PropertyHint.None, "suffix:ms")] public float StartDelay = 0f;
+	[Export(PropertyHint.None, "suffix:ms")] public float ProcessStartDelay = 0f;
 	/// <summary>
 	/// Time in miliseconds from to stop this component after it has started.
 	/// </summary>
-	[Export(PropertyHint.None, "suffix:ms")] public float MaxProcessDuration = float.PositiveInfinity;
+	[Export(PropertyHint.None, "suffix:ms")] public float ProcessMaxProcessDuration = float.PositiveInfinity;
 	/// <summary>
 	/// If this array is not empty, this component only starts if the SuperconCharacterBody2D has switched to this state
 	/// from one of the listed ones.
 	/// </summary>
-	[Export] public Godot.Collections.Array<SuperconState> PreviousStateAllowlist = [];
+	[Export] public NodePath?[] ProcessPreviousStateAllowlist = [];
 	/// <summary>
 	/// This component won't start if the SuperconCharacterBody2D has switched to this state from one of the listed
 	/// ones.
 	/// </summary>
-	[Export] public Godot.Collections.Array<SuperconState> PreviousStateForbidlist = [];
+	[Export] public NodePath?[] ProcessPreviousStateForbidlist = [];
 
 	// -----------------------------------------------------------------------------------------------------------------
-	// PROPERTIES
+	// FIELDS
+	// -----------------------------------------------------------------------------------------------------------------
+
+	private bool Started = false;
+
+	// -----------------------------------------------------------------------------------------------------------------
+	// COMPUTED PROPERTIES
 	// -----------------------------------------------------------------------------------------------------------------
 
 	public SuperconState? State => this.GetParentOrNull<SuperconState>();
 	public ISuperconStateMachineOwner? StateMachineOwner => this.State?.StateMachineOwner;
 	public SuperconBody2D? Character => this.StateMachineOwner?.Character;
 
-	private bool Started = false;
 	private bool ShouldProcess =>
 		this.Enabled
-		&& (this.State?.ActiveDurationMs ?? 0f) >= this.StartDelay
-		&& (this.State?.ActiveDurationMs ?? 0f) < this.StartDelay + this.MaxProcessDuration
+		&& (this.State?.ActiveDurationMs ?? 0f) >= this.ProcessStartDelay
+		&& (this.State?.ActiveDurationMs ?? 0f) < this.ProcessStartDelay + this.ProcessMaxProcessDuration
 		&& this.TestAllowlist()
 		&& this.TestForbidlist();
+
+	private IEnumerable<SuperconState> ProcessPreviousStateAllowlistResolved
+		=> this.ProcessPreviousStateAllowlist
+			.Select(path => this.GetNodeOrNull<SuperconState>(path))
+			.OfType<SuperconState>();
+	private IEnumerable<SuperconState> ProcessPreviousStateForbidlistResolved
+		=> this.ProcessPreviousStateForbidlist
+			.Select(path => this.GetNodeOrNull<SuperconState>(path))
+			.OfType<SuperconState>();
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// VIRTUALS & OVERRIDES
@@ -120,6 +147,19 @@ public abstract partial class SuperconStateComponent : Node2D
 			)
 			.ToArray();
 
+	public override void _ValidateProperty(Dictionary property)
+	{
+		base._ValidateProperty(property);
+		switch (property["name"].AsString())
+		{
+			case nameof(this.ProcessPreviousStateAllowlist):
+			case nameof(this.ProcessPreviousStateForbidlist):
+				property["hint"] = (long) PropertyHint.ArrayType;
+				property["hint_string"] = $"{Variant.Type.NodePath:D}/{PropertyHint.NodePathValidTypes:D}:{nameof(SuperconState)}";
+				break;
+		}
+	}
+
 	public virtual void _SuperconEnter(SuperconStateMachine.Transition transition) {}
 	public virtual void _SuperconStart() {}
 	public virtual void _SuperconProcess(double delta) {}
@@ -133,9 +173,13 @@ public abstract partial class SuperconStateComponent : Node2D
 
 	private void OnStateEntered(SuperconStateMachine.Transition transition)
 	{
+		if (transition.IsCanceled)
+		{
+			return;
+		}
 		this.Started = false;
 		this._SuperconEnter(transition);
-		if (Mathf.IsZeroApprox(this.StartDelay) && this.Enabled)
+		if (Mathf.IsZeroApprox(this.ProcessStartDelay) && this.Enabled)
 		{
 			this.Start();
 		}
@@ -143,6 +187,10 @@ public abstract partial class SuperconStateComponent : Node2D
 
 	private void OnStateExited(SuperconStateMachine.Transition transition)
 	{
+		if (transition.IsCanceled)
+		{
+			return;
+		}
 		if (this.Started)
 		{
 			this.Stop();
@@ -175,10 +223,10 @@ public abstract partial class SuperconStateComponent : Node2D
 
 	private bool TestAllowlist()
 		=> this.StateMachineOwner?.StateMachine.PreviousActiveState == null
-			|| this.PreviousStateAllowlist.Count() == 0
-			|| this.PreviousStateAllowlist.Contains(this.StateMachineOwner.StateMachine.PreviousActiveState);
+			|| this.ProcessPreviousStateAllowlist.Any()
+			|| this.ProcessPreviousStateAllowlistResolved.Contains(this.StateMachineOwner.StateMachine.PreviousActiveState);
 
 	private bool TestForbidlist()
 		=> this.StateMachineOwner?.StateMachine.PreviousActiveState == null
-			|| !this.PreviousStateForbidlist.Contains(this.StateMachineOwner.StateMachine.PreviousActiveState);
+			|| !this.ProcessPreviousStateForbidlistResolved.Contains(this.StateMachineOwner.StateMachine.PreviousActiveState);
 }
