@@ -106,23 +106,21 @@ public partial class PresetMovementComponent : SuperconStateComponent
 			return;
 		}
 
-		// Handles movement interruption on collision.
-		if (
-			!this.InternalVelocity.IsEqualApprox(Vector2.Zero)
-			&& this.Character?.GetLastSlideCollision() is KinematicCollision2D collision
-		)
-		{
-			this.SetPhysicsProcess(false);
-			this.EmitSignalMovementInterrupted(collision);
-			return;
-		}
-
 		// Handles ending the movement when the duration is exceeded.
 		if (this.State?.ActiveDuration >= this.Duration)
 		{
 			this.SetPhysicsProcess(false);
 			this.EmitSignalMovementCompleted();
 			return;
+		}
+
+		// Handles movement interruption on collision.
+		if (
+			!this.InternalVelocity.IsEqualApprox(Vector2.Zero)
+			&& this.Character?.GetLastSlideCollision() is KinematicCollision2D collision
+		)
+		{
+			this.EmitSignalMovementInterrupted(collision);
 		}
 
 		TimeSpan thisFrameActiveDuration = this.State?.ActiveDuration ?? TimeSpan.Zero;
