@@ -1,4 +1,3 @@
-using System;
 using Godot;
 
 namespace Raele.Supercon2D;
@@ -13,7 +12,11 @@ public partial class SuperconStateLayer : SuperconState, ISuperconStateMachineOw
 	[Export] public SuperconState? RestState { get; set; }
 
 	[ExportGroup("Debug", "Debug")]
-	[Export] public bool DebugPrintStateChanges = false;
+	[Export] public bool DebugPrintStateChanges
+	{
+		get => this.StateMachine.DebugPrintContext != null;
+		set => this.StateMachine.DebugPrintContext = value ? this : null;
+	}
 
 	//------------------------------------------------------------------------------------------------------------------
 	// FIELDS
@@ -42,7 +45,6 @@ public partial class SuperconStateLayer : SuperconState, ISuperconStateMachineOw
 		}
 		this.StateEntered += this.OnStateEntered;
 		this.StateExited += this.OnStateExited;
-		this.StateMachine.TransitionCompleted += this.OnStateTransitionCompleted;
 	}
 
 	public override void _ExitTree()
@@ -54,7 +56,6 @@ public partial class SuperconStateLayer : SuperconState, ISuperconStateMachineOw
 		}
 		this.StateEntered -= this.OnStateEntered;
 		this.StateExited -= this.OnStateExited;
-		this.StateMachine.TransitionCompleted -= this.OnStateTransitionCompleted;
 	}
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -68,10 +69,4 @@ public partial class SuperconStateLayer : SuperconState, ISuperconStateMachineOw
 		=> this.AsStateMachineOwner().QueueTransition(this.RestState);
 	private void OnStateExited(SuperconStateMachine.Transition transition)
 		=> this.AsStateMachineOwner().Stop();
-	private void OnStateTransitionCompleted(SuperconStateMachine.Transition transition)
-	{
-		if (this.DebugPrintStateChanges) {
-			GeneralUtil.DebugLog<SuperconStateLayer>($"🔀 State changed: {transition.ExitState?.Name ?? "<null>"} → {transition.EnterState?.Name ?? "<null>"}");
-		}
-	}
 }

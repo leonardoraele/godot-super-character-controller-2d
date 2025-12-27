@@ -1,6 +1,5 @@
 using Godot;
 using Godot.Collections;
-using Raele.GodotUtils.StateMachine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -55,14 +54,15 @@ public partial class SuperconBody2D : CharacterBody2D, ISuperconStateMachineOwne
 	// [Export] public bool TransformFollowsFacingDirection = false;
 
 	[ExportGroup("Debug", "Debug")]
-	[Export] public bool DebugPrintStateChanges = false;
-	[Export] public MouseButton DebugTeleportToMouse = MouseButton.None;
-
-	// -----------------------------------------------------------------------------------------------------------------
-	// SIGNALS
-	// -----------------------------------------------------------------------------------------------------------------
-
-	[Signal] public delegate void StateChangedEventHandler(SuperconState newState, SuperconState? oldState);
+	[Export] public bool DebugPrintStateChanges
+	{
+		get => this.StateMachine.DebugPrintContext != null;
+		set => this.StateMachine.DebugPrintContext = value ? this : null;
+	}
+	[ExportSubgroup("Teleport To Mouse", "DebugTeleportToMouse")]
+	[Export(PropertyHint.GroupEnable)] public bool DebugTeleportToMouseEnabled = false;
+	[Export] public string DebugTeleportToMouseInputAction = "ui_home";
+	[Export] public bool DebugTeleportToMouseDraggable = false;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// FIELDS
@@ -118,7 +118,7 @@ public partial class SuperconBody2D : CharacterBody2D, ISuperconStateMachineOwne
 	// SIGNALS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	[Signal] public delegate void StaeChangedEventHandler(SuperconState? newState, SuperconState? oldState);
+	[Signal] public delegate void StateChangedEventHandler(SuperconState? newState, SuperconState? oldState);
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// OVERRIDES
@@ -126,18 +126,6 @@ public partial class SuperconBody2D : CharacterBody2D, ISuperconStateMachineOwne
 
 	Node ISuperconStateMachineOwner.AsNode() => this;
 	public ISuperconStateMachineOwner AsStateMachineOwner() => this;
-
-	public override void _EnterTree()
-	{
-		base._EnterTree();
-		this.StateMachine.TransitionCompleted += this.OnStateTransitionCompleted;
-	}
-
-	public override void _ExitTree()
-	{
-		base._ExitTree();
-		this.StateMachine.TransitionCompleted -= this.OnStateTransitionCompleted;
-	}
 
 	public override void _Ready()
 	{
@@ -188,6 +176,11 @@ public partial class SuperconBody2D : CharacterBody2D, ISuperconStateMachineOwne
 				property["usage"] = this.MotionMode == MotionModeEnum.Floating
 					? (long) PropertyUsageFlags.Default
 					: (long) PropertyUsageFlags.None;
+				break;
+			case nameof(this.DebugTeleportToMouseInputAction):
+				InputMap.LoadFromProjectSettings();
+				property["hint"] = (long) PropertyHint.EnumSuggestion;
+				property["hint_string"] = string.Join(",", InputMap.GetActions());
 				break;
 			default:
 				if (property["name"].AsString() == CharacterBody2D.PropertyName.MotionMode)
@@ -250,21 +243,15 @@ public partial class SuperconBody2D : CharacterBody2D, ISuperconStateMachineOwne
 	{
 		if (
 			OS.IsDebugBuild()
-			&& this.DebugTeleportToMouse != MouseButton.None
-			&& Input.IsMouseButtonPressed(this.DebugTeleportToMouse)
+			&& this.DebugTeleportToMouseEnabled
+			&& this.DebugTeleportToMouseDraggable
+				? Input.IsActionPressed(this.DebugTeleportToMouseInputAction)
+				: Input.IsActionJustPressed(this.DebugTeleportToMouseInputAction)
 		)
 		{
 			this.GlobalPosition = this.GetGlobalMousePosition();
 			this.Velocity = Vector2.Zero;
 		}
-	}
-
-	private void OnStateTransitionCompleted(StateMachine<SuperconState>.Transition transition)
-	{
-		if (this.DebugPrintStateChanges) {
-			GeneralUtil.DebugLog<SuperconBody2D>($"🔀 State changed: {transition.ExitState?.Name ?? "<null>"} → {transition.EnterState?.Name ?? "<null>"}");
-		}
-		this.EmitSignalStateChanged(transition.EnterState, transition.ExitState);
 	}
 
 	/// <summary>

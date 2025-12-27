@@ -30,7 +30,7 @@ public partial class SuperconDebugger : CanvasLayer
 	{
 		this.Visible = !Engine.IsEditorHint() && OS.IsDebugBuild();
 		this.ProcessMode = ProcessModeEnum.Always;
-		this.DebuggerInterfaceScene = ResourceLoader.Load<PackedScene>($"res://addons/{nameof(Supercon2D)}/SuperconDebuggerInterface.tscn");
+		this.DebuggerInterfaceScene = ResourceLoader.Load<PackedScene>($"res://addons/{nameof(Supercon2D)}/scenes/{nameof(SuperconDebugger)}.tscn");
 		if (!Engine.IsEditorHint())
 		{
 			Node node = this.DebuggerInterfaceScene.Instantiate();
