@@ -19,7 +19,6 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 	// -----------------------------------------------------------------------------------------------------------------
 
 	[Export] public string Animation = "";
-	[Export] public ResetStrategyEnum ResetStrategy = ResetStrategyEnum.Never;
 
 	[ExportGroup("Custom Animation Player")]
 	[Export(PropertyHint.GroupEnable)] public bool CustomAnimationPlayerEnabled
@@ -52,6 +51,9 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 	[Export] public Node? TimingContext = null;
 	[Export] public Variant TimingParamVar = new Variant();
 	[Export(PropertyHint.Expression)] public string TimingExpression = "";
+
+	[ExportGroup("Reset Strategy")]
+	[Export] public ResetStrategyEnum ResetStrategy = ResetStrategyEnum.Never;
 
 	[ExportCategory("🔀 Connect State Transitions")]
 	[ExportToolButton("On Animation Finished")]
