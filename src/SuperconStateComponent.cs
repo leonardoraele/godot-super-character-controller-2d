@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Godot;
 using Godot.Collections;
+using Raele.MyProject;
 
 namespace Raele.Supercon2D.StateComponents;
 
@@ -58,25 +59,26 @@ public abstract partial class SuperconStateComponent : Node2D
 	// COMPUTED PROPERTIES
 	// -----------------------------------------------------------------------------------------------------------------
 
+	public IDiscreteIntervalProcessor? ParentProcessor => this.GetParentOrNull<IDiscreteIntervalProcessor>();
 	public SuperconState? State => this.GetParentOrNull<SuperconState>();
 	public ISuperconStateMachineOwner? StateMachineOwner => this.State?.StateMachineOwner;
 	public SuperconBody2D? Character => this.StateMachineOwner?.Character;
 
 	protected bool ShouldProcess =>
 		this.Enabled
-		&& (this.State?.ActiveDurationMs ?? 0f) >= this.ProcessStartDelay
-		&& (this.State?.ActiveDurationMs ?? 0f) < this.ProcessStartDelay + this.ProcessMaxProcessDuration
+		&& (this.ParentProcessor?.ActiveTimeSpan.TotalMilliseconds ?? 0f) >= this.ProcessStartDelay
+		&& (this.ParentProcessor?.ActiveTimeSpan.TotalMilliseconds ?? 0f) < this.ProcessStartDelay + this.ProcessMaxProcessDuration
 		&& this.TestAllowlist()
 		&& this.TestForbidlist();
 
-	private IEnumerable<SuperconState> ProcessPreviousStateAllowlistResolved
+	private IEnumerable<IDiscreteIntervalProcessor> ProcessPreviousStateAllowlistResolved
 		=> this.ProcessPreviousStateAllowlist
-			.Select(path => this.GetNodeOrNull<SuperconState>(path))
-			.OfType<SuperconState>();
-	private IEnumerable<SuperconState> ProcessPreviousStateForbidlistResolved
+			.Select(path => this.GetNodeOrNull<IDiscreteIntervalProcessor>(path))
+			.OfType<IDiscreteIntervalProcessor>();
+	private IEnumerable<IDiscreteIntervalProcessor> ProcessPreviousStateForbidlistResolved
 		=> this.ProcessPreviousStateForbidlist
-			.Select(path => this.GetNodeOrNull<SuperconState>(path))
-			.OfType<SuperconState>();
+			.Select(path => this.GetNodeOrNull<IDiscreteIntervalProcessor>(path))
+			.OfType<IDiscreteIntervalProcessor>();
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// VIRTUALS & OVERRIDES
@@ -89,8 +91,8 @@ public abstract partial class SuperconStateComponent : Node2D
 		{
 			return;
 		}
-		this.GetParentOrNull<SuperconState>()?.Connect(SuperconState.SignalName.StateEntered, new Callable(this, MethodName.OnStateEntered));
-		this.GetParentOrNull<SuperconState>()?.Connect(SuperconState.SignalName.StateExited, new Callable(this, MethodName.OnStateExited));
+		this.ParentProcessor?.StartedEvent += this.OnStateEntered;
+		this.ParentProcessor?.FinishedEvent += this.OnStateExited;
 	}
 
 	public override void _ExitTree()
@@ -100,8 +102,8 @@ public abstract partial class SuperconStateComponent : Node2D
 		{
 			return;
 		}
-		this.GetParentOrNull<SuperconState>()?.Disconnect(SuperconState.SignalName.StateEntered, new Callable(this, MethodName.OnStateEntered));
-		this.GetParentOrNull<SuperconState>()?.Disconnect(SuperconState.SignalName.StateExited, new Callable(this, MethodName.OnStateExited));
+		this.ParentProcessor?.StartedEvent -= this.OnStateEntered;
+		this.ParentProcessor?.FinishedEvent += this.OnStateExited;
 	}
 
 	public override void _Process(double delta)
@@ -141,8 +143,8 @@ public abstract partial class SuperconStateComponent : Node2D
 	public override string[] _GetConfigurationWarnings()
 		=> new List<string>()
 			.Concat(
-				this.Owner != this && this.GetParentOrNull<SuperconState>() == null
-					? [$"{this.GetType().Name} must be a direct child of a {nameof(SuperconState)} node."]
+				this.Owner != this && this.GetParentOrNull<IDiscreteIntervalProcessor>() == null
+					? [$"{this.GetType().Name} must be a direct child of a {nameof(IDiscreteIntervalProcessor)} node."]
 					: []
 			)
 			.ToArray();
@@ -155,7 +157,7 @@ public abstract partial class SuperconStateComponent : Node2D
 			case nameof(this.ProcessPreviousStateAllowlist):
 			case nameof(this.ProcessPreviousStateForbidlist):
 				property["hint"] = (long) PropertyHint.ArrayType;
-				property["hint_string"] = $"{Variant.Type.NodePath:D}/{PropertyHint.NodePathValidTypes:D}:{nameof(SuperconState)}";
+				property["hint_string"] = $"{Variant.Type.NodePath:D}/{PropertyHint.NodePathValidTypes:D}:{nameof(IDiscreteIntervalProcessor)}";
 				break;
 		}
 	}
@@ -171,9 +173,10 @@ public abstract partial class SuperconStateComponent : Node2D
 	// METHODS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	private void OnStateEntered(SuperconStateMachine.Transition transition)
+	private void OnStateEntered(Variant argument)
 	{
-		if (transition.IsCanceled)
+		SuperconStateMachine.Transition? transition = argument.AsGodotObject() as SuperconStateMachine.Transition;
+		if (transition == null || transition.IsCanceled)
 		{
 			return;
 		}
@@ -185,9 +188,10 @@ public abstract partial class SuperconStateComponent : Node2D
 		}
 	}
 
-	private void OnStateExited(SuperconStateMachine.Transition transition)
+	private void OnStateExited(Variant argument)
 	{
-		if (transition.IsCanceled)
+		SuperconStateMachine.Transition? transition = argument.AsGodotObject() as SuperconStateMachine.Transition;
+		if (transition == null || transition.IsCanceled)
 		{
 			return;
 		}

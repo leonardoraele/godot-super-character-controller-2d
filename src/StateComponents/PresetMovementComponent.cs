@@ -59,7 +59,7 @@ public partial class PresetMovementComponent : SuperconStateComponent
 	// PROPERTIES
 	// -----------------------------------------------------------------------------------------------------------------
 
-	public TimeSpan Duration => TimeSpan.FromMilliseconds(this.DurationMs);
+	public TimeSpan DurationTimeSpan => TimeSpan.FromMilliseconds(this.DurationMs);
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// SIGNALS
@@ -107,7 +107,7 @@ public partial class PresetMovementComponent : SuperconStateComponent
 		}
 
 		// Handles ending the movement when the duration is exceeded.
-		if (this.State?.ActiveDuration >= this.Duration)
+		if (this.ParentProcessor?.ActiveTimeSpan >= this.DurationTimeSpan)
 		{
 			this.SetPhysicsProcess(false);
 			this.EmitSignalMovementCompleted();
@@ -123,14 +123,14 @@ public partial class PresetMovementComponent : SuperconStateComponent
 			this.EmitSignalMovementInterrupted(collision);
 		}
 
-		TimeSpan thisFrameActiveDuration = this.State?.ActiveDuration ?? TimeSpan.Zero;
-		TimeSpan lastFrameActiveDuration = this.State?.ActiveDuration.Subtract(TimeSpan.FromSeconds(delta)) ?? TimeSpan.Zero;
+		TimeSpan thisFrameActiveDuration = this.ParentProcessor?.ActiveTimeSpan ?? TimeSpan.Zero;
+		TimeSpan lastFrameActiveDuration = this.ParentProcessor?.ActiveTimeSpan.Subtract(TimeSpan.FromSeconds(delta)) ?? TimeSpan.Zero;
 
 		// TODO We could precalculate the jump height curve so that we don't need to read the curve twice every frame.
 		// TODO We could read this.Character.GetPositionDelta and accumulate the movement instead of recalculing the
 		// previous frame every time.
-		Vector2 thisFramePosition = this.CalculateExpectedPosition(thisFrameActiveDuration / this.Duration);
-		Vector2 lastFramePosition = this.CalculateExpectedPosition(lastFrameActiveDuration / this.Duration);
+		Vector2 thisFramePosition = this.CalculateExpectedPosition(thisFrameActiveDuration / this.DurationTimeSpan);
+		Vector2 lastFramePosition = this.CalculateExpectedPosition(lastFrameActiveDuration / this.DurationTimeSpan);
 		this.Character?.Velocity += this.InternalVelocity = (thisFramePosition - lastFramePosition) / (float) delta;
 	}
 
