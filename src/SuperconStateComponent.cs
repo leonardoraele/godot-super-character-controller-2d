@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,7 +7,7 @@ using Raele.GodotUtils;
 
 namespace Raele.Supercon2D.StateComponents;
 
-[Tool]
+[Tool][GlobalClass]
 public abstract partial class SuperconStateComponent : Node2D
 {
 	// -----------------------------------------------------------------------------------------------------------------

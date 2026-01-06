@@ -3,6 +3,7 @@ using Godot;
 
 namespace Raele.Supercon2D.StateComponents;
 
+[GlobalClass]
 public partial class SingleAxisControlComponent : SuperconStateComponent
 {
 	// -----------------------------------------------------------------------------------------------------------------

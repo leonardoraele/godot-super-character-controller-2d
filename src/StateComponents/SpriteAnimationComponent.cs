@@ -4,7 +4,7 @@ using Raele.GodotUtils.StateMachine;
 
 namespace Raele.Supercon2D.StateComponents;
 
-[Tool]
+[Tool][GlobalClass]
 public partial class SpriteAnimationComponent : SuperconStateComponent
 {
 	// -----------------------------------------------------------------------------------------------------------------

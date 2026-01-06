@@ -3,7 +3,7 @@ using Godot;
 
 namespace Raele.Supercon2D.StateComponents;
 
-[Tool]
+[Tool][GlobalClass]
 public partial class CustomTriggerComponent : SuperconStateComponent
 {
 	// -----------------------------------------------------------------------------------------------------------------

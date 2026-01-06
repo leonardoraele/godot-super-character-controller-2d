@@ -1,6 +1,4 @@
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Godot;
 using Raele.GodotUtils;
 using Raele.GodotUtils.Extensions;
@@ -30,8 +28,9 @@ public partial class SuperconState : Node2D, SuperconStateMachine.IState, IActiv
 	public bool IsActive => this.StateMachineOwner?.StateMachine.ActiveState == this;
 	public bool IsPreviousActiveState => this.StateMachineOwner?.StateMachine.PreviousActiveState == this;
 	public SuperconInputMapping? InputMapping => this.StateMachineOwner?.Character?.InputMapping;
+	public TimeSpan DeltaTimeSpan { get; private set; }
 	public TimeSpan ActiveTimeSpan => this.IsActive
-		? this.StateMachineOwner?.StateMachine.ActiveStateDuration ?? TimeSpan.Zero
+		? this.StateMachineOwner?.StateMachine.ActiveStateTimeSpan ?? TimeSpan.Zero
 		: TimeSpan.Zero;
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -103,10 +102,11 @@ public partial class SuperconState : Node2D, SuperconStateMachine.IState, IActiv
 	// 	base._Process(delta);
 	// }
 
-	// public override void _PhysicsProcess(double delta)
-	// {
-	// 	base._PhysicsProcess(delta);
-	// }
+	public override void _PhysicsProcess(double delta)
+	{
+		base._PhysicsProcess(delta);
+		this.DeltaTimeSpan = TimeSpan.FromSeconds(delta);
+	}
 
 	// public override string[] _GetConfigurationWarnings()
 	// 	=> new List<string>()
