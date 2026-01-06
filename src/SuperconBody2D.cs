@@ -61,7 +61,7 @@ public partial class SuperconBody2D : CharacterBody2D, ISuperconStateMachineOwne
 	}
 	[ExportSubgroup("Teleport To Mouse", "DebugTeleportToMouse")]
 	[Export(PropertyHint.GroupEnable)] public bool DebugTeleportToMouseEnabled = false;
-	[Export] public string DebugTeleportToMouseInputAction = "ui_home";
+	[Export(PropertyHint.InputName)] public string DebugTeleportToMouseInputAction = "ui_home";
 	[Export] public bool DebugTeleportToMouseDraggable = false;
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -176,11 +176,6 @@ public partial class SuperconBody2D : CharacterBody2D, ISuperconStateMachineOwne
 				property["usage"] = this.MotionMode == MotionModeEnum.Floating
 					? (long) PropertyUsageFlags.Default
 					: (long) PropertyUsageFlags.None;
-				break;
-			case nameof(this.DebugTeleportToMouseInputAction):
-				InputMap.LoadFromProjectSettings();
-				property["hint"] = (long) PropertyHint.EnumSuggestion;
-				property["hint_string"] = string.Join(",", InputMap.GetActions());
 				break;
 			default:
 				if (property["name"].AsString() == CharacterBody2D.PropertyName.MotionMode)

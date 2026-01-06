@@ -13,7 +13,7 @@ public partial class InputActionComponent : SuperconStateComponent
 	/// <summary>
 	/// Name of the input action to be read for this ability.
 	/// </summary>
-	[Export] public string InputActionName = "";
+	[Export(PropertyHint.InputName)] public string InputActionName = "";
 	[Export] public InputModeEnum InputMode = InputModeEnum.InputIsJustDown;
 
 	[ExportGroup("Debug", "Debug")]
@@ -57,18 +57,15 @@ public partial class InputActionComponent : SuperconStateComponent
 		}
 	}
 
-	public override void _ValidateProperty(Dictionary property)
-	{
-		base._ValidateProperty(property);
-		switch (property["name"].AsString())
-		{
-			case nameof(InputActionName):
-				InputMap.LoadFromProjectSettings();
-				property["hint"] = (long) PropertyHint.Enum;
-				property["hint_string"] = string.Join(",", InputMap.GetActions());
-				break;
-		}
-	}
+	// public override void _ValidateProperty(Dictionary property)
+	// {
+	// 	base._ValidateProperty(property);
+	// 	switch (property["name"].AsString())
+	// 	{
+	// 		case nameof():
+	// 			break;
+	// 	}
+	// }
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// METHODS

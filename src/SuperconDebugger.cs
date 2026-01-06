@@ -12,7 +12,7 @@ public partial class SuperconDebugger : CanvasLayer
 	// EXPORTS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	[Export] public string ToggleVisibilityInputAction = "ui_menu";
+	[Export(PropertyHint.InputName)] public string ToggleVisibilityInputAction = "ui_menu";
 	[Export] public PackedScene? DebuggerInterfaceScene;
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -60,11 +60,6 @@ public partial class SuperconDebugger : CanvasLayer
 		base._ValidateProperty(property);
 		switch (property["name"].AsString())
 		{
-			case nameof(this.ToggleVisibilityInputAction):
-				InputMap.LoadFromProjectSettings();
-				property["hint"] = (long) PropertyHint.Enum;
-				property["hint_string"] = string.Join(",", InputMap.GetActions());
-				break;
 			case nameof(this.DebuggerInterfaceScene):
 				property["usage"] = (long) PropertyUsageFlags.ReadOnly | (long) PropertyUsageFlags.Editor;
 				break;

@@ -44,10 +44,10 @@ public partial class SuperconInputMapping : Resource
 
 	[Export] public bool Enabled { get; private set; } = true;
 
-	[Export] public string MoveLeftAction = "character_move_left";
-	[Export] public string MoveRightAction = "character_move_right";
-	[Export] public string MoveUpAction = "character_move_up";
-	[Export] public string MoveDownAction = "character_move_down";
+	[Export(PropertyHint.InputName)] public string MoveLeftAction = "character_move_left";
+	[Export(PropertyHint.InputName)] public string MoveRightAction = "character_move_right";
+	[Export(PropertyHint.InputName)] public string MoveUpAction = "character_move_up";
+	[Export(PropertyHint.InputName)] public string MoveDownAction = "character_move_down";
 
 	[ExportGroup("Buffer Inputs")]
 	[Export(PropertyHint.GroupEnable)] public bool BufferInputsEnabled = true;
@@ -72,21 +72,14 @@ public partial class SuperconInputMapping : Resource
 	// GODOT EVENTS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	public override void _ValidateProperty(Godot.Collections.Dictionary property)
-	{
-		base._ValidateProperty(property);
-		switch (property["name"].AsString())
-		{
-			case nameof(MoveUpAction):
-			case nameof(MoveDownAction):
-			case nameof(MoveLeftAction):
-			case nameof(MoveRightAction):
-				InputMap.LoadFromProjectSettings();
-				property["hint"] = (long) PropertyHint.Enum;
-				property["hint_string"] = string.Join(",", InputMap.GetActions());
-				break;
-		}
-	}
+	// public override void _ValidateProperty(Godot.Collections.Dictionary property)
+	// {
+	// 	base._ValidateProperty(property);
+	// 	switch (property["name"].AsString())
+	// 	{
+	// 		case nameof():
+	// 	}
+	// }
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// METHODS
