@@ -58,15 +58,15 @@ public abstract partial class SuperconStateComponent : Node2D
 	// COMPUTED PROPERTIES
 	// -----------------------------------------------------------------------------------------------------------------
 
-	public IActivity? ParentProcessor => this.GetParentOrNull<IActivity>();
+	public IActivity? Activity => this.GetParentOrNull<IActivity>();
 	public SuperconState? State => this.GetParentOrNull<SuperconState>();
 	public ISuperconStateMachineOwner? StateMachineOwner => this.State?.StateMachineOwner;
 	public SuperconBody2D? Character => this.StateMachineOwner?.Character;
 
 	protected bool ShouldProcess =>
 		this.Enabled
-		&& (this.ParentProcessor?.ActiveTimeSpan.TotalMilliseconds ?? 0f) >= this.ProcessStartDelay
-		&& (this.ParentProcessor?.ActiveTimeSpan.TotalMilliseconds ?? 0f) < this.ProcessStartDelay + this.ProcessMaxProcessDuration
+		&& (this.Activity?.ActiveTimeSpan.TotalMilliseconds ?? 0f) >= this.ProcessStartDelay
+		&& (this.Activity?.ActiveTimeSpan.TotalMilliseconds ?? 0f) < this.ProcessStartDelay + this.ProcessMaxProcessDuration
 		&& this.TestAllowlist()
 		&& this.TestForbidlist();
 
@@ -90,8 +90,8 @@ public abstract partial class SuperconStateComponent : Node2D
 		{
 			return;
 		}
-		this.ParentProcessor?.EventStarted += this.OnStateEntered;
-		this.ParentProcessor?.EventFinished += this.OnStateExited;
+		this.Activity?.EventStarted += this.OnStateEntered;
+		this.Activity?.EventFinished += this.OnStateExited;
 	}
 
 	public override void _ExitTree()
@@ -101,8 +101,8 @@ public abstract partial class SuperconStateComponent : Node2D
 		{
 			return;
 		}
-		this.ParentProcessor?.EventStarted -= this.OnStateEntered;
-		this.ParentProcessor?.EventFinished += this.OnStateExited;
+		this.Activity?.EventStarted -= this.OnStateEntered;
+		this.Activity?.EventFinished += this.OnStateExited;
 	}
 
 	public override void _Process(double delta)
@@ -172,7 +172,7 @@ public abstract partial class SuperconStateComponent : Node2D
 	// METHODS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	private void OnStateEntered(Variant argument)
+	private void OnStateEntered(string mode, Variant argument)
 	{
 		SuperconStateMachine.Transition? transition = argument.AsGodotObject() as SuperconStateMachine.Transition;
 		if (transition == null || transition.IsCanceled)
@@ -187,9 +187,9 @@ public abstract partial class SuperconStateComponent : Node2D
 		}
 	}
 
-	private void OnStateExited(Variant argument)
+	private void OnStateExited(string reason, Variant details)
 	{
-		SuperconStateMachine.Transition? transition = argument.AsGodotObject() as SuperconStateMachine.Transition;
+		SuperconStateMachine.Transition? transition = details.AsGodotObject() as SuperconStateMachine.Transition;
 		if (transition == null || transition.IsCanceled)
 		{
 			return;

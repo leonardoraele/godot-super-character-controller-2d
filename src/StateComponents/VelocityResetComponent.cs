@@ -122,7 +122,7 @@ public partial class VelocityResetComponent : SuperconStateComponent
 	public override void _SuperconPhysicsProcess(double delta)
 	{
 		base._SuperconPhysicsProcess(delta);
-		if (this.ParentProcessor?.ActiveTimeSpan.TotalMilliseconds > this.Duration - Mathf.Epsilon)
+		if (this.Activity?.ActiveTimeSpan.TotalMilliseconds > this.Duration - Mathf.Epsilon)
 		{
 			this.ZeroOutVelocity();
 			return;
@@ -152,14 +152,14 @@ public partial class VelocityResetComponent : SuperconStateComponent
 
 	private void ProcessEase()
 	{
-		if (this.ParentProcessor == null)
+		if (this.Activity == null)
 		{
 			return;
 		}
 		if (this.HorizontalAffected)
-			this.Character?.VelocityX = this.InitialVelocity.X * Mathf.Ease((float) this.ParentProcessor.ActiveTimeSpan.TotalMilliseconds / this.Duration, this.Easing);
+			this.Character?.VelocityX = this.InitialVelocity.X * Mathf.Ease((float) this.Activity.ActiveTimeSpan.TotalMilliseconds / this.Duration, this.Easing);
 		if (this.VerticalAffected)
-			this.Character?.VelocityY = this.InitialVelocity.Y * Mathf.Ease((float) this.ParentProcessor.ActiveTimeSpan.TotalMilliseconds / this.Duration, this.Easing);
+			this.Character?.VelocityY = this.InitialVelocity.Y * Mathf.Ease((float) this.Activity.ActiveTimeSpan.TotalMilliseconds / this.Duration, this.Easing);
 	}
 
 	private void ProcessLerp()
