@@ -43,8 +43,8 @@ public partial class SuperconStateLayer : SuperconState, ISuperconStateMachineOw
 		{
 			return;
 		}
-		this.StateEntered += this.OnStateEntered;
-		this.StateExited += this.OnStateExited;
+		this.Started += this.OnStateEntered;
+		this.Finished += this.OnStateExited;
 	}
 
 	public override void _ExitTree()
@@ -54,8 +54,8 @@ public partial class SuperconStateLayer : SuperconState, ISuperconStateMachineOw
 		{
 			return;
 		}
-		this.StateEntered -= this.OnStateEntered;
-		this.StateExited -= this.OnStateExited;
+		this.Started -= this.OnStateEntered;
+		this.Finished -= this.OnStateExited;
 	}
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -65,8 +65,8 @@ public partial class SuperconStateLayer : SuperconState, ISuperconStateMachineOw
 	Node ISuperconStateMachineOwner.AsNode() => this;
 	public ISuperconStateMachineOwner AsStateMachineOwner() => this;
 
-	private void OnStateEntered(SuperconStateMachine.Transition transition)
+	private void OnStateEntered(string mode, Variant argument)
 		=> this.AsStateMachineOwner().QueueTransition(this.RestState);
-	private void OnStateExited(SuperconStateMachine.Transition transition)
+	private void OnStateExited(string reason, Variant details)
 		=> this.AsStateMachineOwner().Stop();
 }

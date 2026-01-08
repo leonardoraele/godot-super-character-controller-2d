@@ -9,7 +9,7 @@ public interface ISuperconStateMachineOwner
 	// STATICS
 	//------------------------------------------------------------------------------------------------------------------
 
-	public static ISuperconStateMachineOwner? GetOrNull(Node node)
+	public static ISuperconStateMachineOwner? Of(Node node)
 	{
 		for (Node? ancestor = node.GetParent(); ancestor != null; ancestor = ancestor.GetParent())
 		{
@@ -22,7 +22,7 @@ public interface ISuperconStateMachineOwner
 	}
 	public static bool TryGet(Node node, [NotNullWhen(true)] out ISuperconStateMachineOwner? owner)
 	{
-		owner = GetOrNull(node);
+		owner = Of(node);
 		return owner != null;
 	}
 
@@ -46,7 +46,7 @@ public interface ISuperconStateMachineOwner
 	public SuperconBody2D? Character
 		=> this is SuperconBody2D character
 			? character
-			: ISuperconStateMachineOwner.GetOrNull(this.AsNode())?.Character;
+			: ISuperconStateMachineOwner.Of(this.AsNode())?.Character;
 
 	public void ResetState() => this.StateMachine.QueueTransition(this.RestState);
 	public void QueueTransition(string stateName, Variant data = default)
