@@ -44,16 +44,16 @@ public partial class VelocityResetComponent : SuperconStateComponent
 	// INTERNAL TYPES
 	// -----------------------------------------------------------------------------------------------------------------
 
-	public enum AxisEnum : byte {
-		Both,
-		Horizontal,
-		Vertical,
+	public enum AxisEnum : sbyte {
+		Both = 1,
+		Horizontal = 2,
+		Vertical = 3,
 	}
 
-	public enum ModeEnum : byte {
-		Instant,
-		Ease,
-		Lerp,
+	public enum ModeEnum : sbyte {
+		Instant = 1,
+		Ease = 2,
+		Lerp = 3,
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

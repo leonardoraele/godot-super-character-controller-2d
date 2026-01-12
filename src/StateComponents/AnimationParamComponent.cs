@@ -56,7 +56,7 @@ public partial class AnimationParamComponent : SuperconStateComponent
 	// INTERNAL TYPES
 	// -----------------------------------------------------------------------------------------------------------------
 
-	// public enum Enum : byte {
+	// public enum Enum : sbyte {
 	// }
 
 	// -----------------------------------------------------------------------------------------------------------------

@@ -104,14 +104,14 @@ public partial class PlayAnimationComponent : SuperconStateComponent
 	// INTERNAL TYPES
 	// -----------------------------------------------------------------------------------------------------------------
 
-	public enum TimingStrategyEnum :  byte
+	public enum TimingStrategyEnum :  sbyte
 	{
-		OnStateEnter = 0,
-		WhenPlayerIsIdle = 1,
-		WhenExpressionIsTrue = 2,
+		OnStateEnter = 1,
+		WhenPlayerIsIdle = 2,
+		WhenExpressionIsTrue = 3,
 	}
 
-	public enum ResetStrategyEnum : byte
+	public enum ResetStrategyEnum : sbyte
 	{
 		Never = 0,
 		BeforePlay = 1,

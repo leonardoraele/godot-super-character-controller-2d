@@ -13,8 +13,10 @@ public partial class SuperconStateMachine : Raele.GodotUtils.StateMachine.StateM
 		{
 			if (this.DebugPrintContext == null)
 				return;
+			string fromState = transition.ExitState?.Name.ToString() ?? "<null>";
+			string toState = transition.EnterState?.Name.ToString() ?? "<null>";
 			this.DebugPrintContext?.DebugLog(
-				$"🔀 State changed: {transition.ExitState?.Name.ToString().BBCBold()} → {transition.EnterState?.Name.ToString().BBCBold()}",
+				$"🔀 State changed: {fromState.BBCBold()} → {toState.BBCBold()}",
 				transition
 			);
 		};

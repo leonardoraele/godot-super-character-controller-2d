@@ -10,17 +10,17 @@ public partial class ImpulseComponent : SuperconStateComponent
 	// -----------------------------------------------------------------------------------------------------------------
 
 	// TODO
-	// public enum DirectionReferenceEnum : byte
+	// public enum DirectionReferenceEnum : sbyte
 	// {
 	// 	Absolute,
 	// 	FacingDirection,
 	// }
 
-	public enum ImpulseTypeEnum : byte
+	public enum ImpulseTypeEnum : sbyte
 	{
-		Add,
-		OverrideSingleAxis,
-		OverrideBothAxis,
+		Add = 1,
+		OverrideSingleAxis = 2,
+		OverrideBothAxis = 3,
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

@@ -1,10 +1,10 @@
 using Godot;
-using Raele.GodotUtils;
+using Raele.GodotUtils.ActivitySystem;
 
 namespace Raele.Supercon2D;
 
 [Tool][GlobalClass]
-public partial class SuperconState : ActivityNode2D, SuperconStateMachine.IState
+public partial class SuperconState : Activity, SuperconStateMachine.IState
 {
 	//==================================================================================================================
 	// EXPORTS
