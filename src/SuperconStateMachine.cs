@@ -17,7 +17,7 @@ public partial class SuperconStateMachine : Raele.GodotUtils.StateMachine.StateM
 			string toState = transition.EnterState?.Name.ToString() ?? "<null>";
 			this.DebugPrintContext?.DebugLog(
 				$"🔀 State changed: {fromState.BBCBold()} → {toState.BBCBold()}",
-				transition
+				[transition]
 			);
 		};
 	}
