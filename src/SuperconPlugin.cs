@@ -9,8 +9,13 @@ public partial class SuperconPlugin : EditorPlugin
 {
 	public override void _EnterTree()
 	{
-		this.AddCustomType(nameof(SuperconState), nameof(Node2D), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(SuperconState)}.cs"), null);
-		this.AddCustomType(nameof(SuperconStateLayer), nameof(Node2D), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(SuperconStateLayer)}.cs"), null);
+		Texture2D stateIcon = GD.Load<Texture2D>($"res://addons/{nameof(Supercon2D)}/icons/character_body_neutral.png.png");
+
+		this.AddCustomType($"{nameof(SuperconState)}2D", nameof(Node2D), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(SuperconState)}.cs"), stateIcon);
+		this.AddCustomType($"{nameof(SuperconStateLayer)}2D", nameof(Node2D), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(SuperconStateLayer)}.cs"), stateIcon);
+
+		this.AddCustomType($"{nameof(SuperconState)}3D", nameof(Node3D), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(SuperconState)}.cs"), stateIcon);
+		this.AddCustomType($"{nameof(SuperconStateLayer)}3D", nameof(Node3D), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(SuperconStateLayer)}.cs"), stateIcon);
 
 		this.AddCustomType(nameof(SuperconStateComponent), nameof(Node2D), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(SuperconStateComponent)}.cs"), null);
 		this.AddCustomType(nameof(PlayAnimationComponent), nameof(Node2D), GD.Load<Script>($"res://addons/{nameof(Supercon2D)}/src/{nameof(StateComponents2D)}/{nameof(PlayAnimationComponent)}.cs"), null);
@@ -31,8 +36,11 @@ public partial class SuperconPlugin : EditorPlugin
 
 	public override void _ExitTree()
 	{
-		this.RemoveCustomType(nameof(SuperconBody2D));
-		this.RemoveCustomType(nameof(SuperconState));
+		this.RemoveCustomType($"{nameof(SuperconState)}2D");
+		this.RemoveCustomType($"{nameof(SuperconStateLayer)}2D");
+
+		this.RemoveCustomType($"{nameof(SuperconState)}3D");
+		this.RemoveCustomType($"{nameof(SuperconStateLayer)}3D");
 
 		this.RemoveCustomType(nameof(PlayAnimationComponent));
 		this.RemoveCustomType(nameof(AnimationParamComponent));
