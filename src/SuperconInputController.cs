@@ -57,7 +57,7 @@ public partial class SuperconInputController : Resource
 	// FIELDS
 	// -----------------------------------------------------------------------------------------------------------------
 
-	public Vector2 MovementInput { get; private set; }
+	public Vector2 RawMovementInput { get; private set; }
 	private Dictionary<string, InputBuffer> InputBuffers = new();
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -92,7 +92,7 @@ public partial class SuperconInputController : Resource
 		{
 			return;
 		}
-		this.MovementInput = Input.GetVector(
+		this.RawMovementInput = Input.GetVector(
 			this.MoveLeftAction,
 			this.MoveRightAction,
 			this.MoveUpAction,
@@ -121,7 +121,7 @@ public partial class SuperconInputController : Resource
 		this.Enabled = enabled;
 		if (!enabled)
 		{
-			this.MovementInput = Vector2.Zero;
+			this.RawMovementInput = Vector2.Zero;
 			foreach (InputBuffer buffer in this.InputBuffers.Values)
 			{
 				buffer.ConsumeInput();

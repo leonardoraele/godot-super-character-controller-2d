@@ -4,7 +4,7 @@ using Raele.GodotUtils.Extensions;
 
 namespace Raele.Supercon.StateComponents3D;
 
-[Tool]
+[Tool][GlobalClass]
 public partial class ImpulseComponent : SuperconStateComponent3D
 {
 	//==================================================================================================================

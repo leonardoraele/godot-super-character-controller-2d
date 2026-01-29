@@ -58,20 +58,18 @@ public partial class SuperconBody3D : CharacterBody3D, ISuperconStateMachineOwne
 	// COMPUTED PROPERTIES
 	//==================================================================================================================
 
-	public Vector3 Forward => this.Basis.Z * -1;
-
 	/// <summary>
 	/// This is the character's velocity relative to their basis of rotation.
 	/// </summary>
 	public Vector3 LocalVelocity {
-		get => this.Velocity.Rotated(Vector3.Up, this.Rotation.Y * -1);
-		set => this.Velocity = value.Rotated(Vector3.Up, this.Rotation.Y);
+		get => this.ToLocal(this.Velocity);
+		set => this.Velocity = this.ToGlobal(value);
 	}
 	public float ForwardSpeed {
 		get => this.LocalVelocity.Z * -1;
 		set => this.LocalVelocity = this.LocalVelocity with { Z = value * -1 };
 	}
-	public float SidewaySpeed {
+	public float LateralSpeed {
 		get => this.LocalVelocity.X;
 		set => this.LocalVelocity = this.LocalVelocity with { X = value };
 	}

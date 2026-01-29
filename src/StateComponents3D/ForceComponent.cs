@@ -1,8 +1,8 @@
 using Godot;
-using Raele.GodotUtils.Extensions;
 
 namespace Raele.Supercon.StateComponents3D;
 
+[GlobalClass]
 public partial class ForceComponent : SuperconStateComponent3D
 {
 	// -----------------------------------------------------------------------------------------------------------------
