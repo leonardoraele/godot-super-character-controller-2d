@@ -49,10 +49,12 @@ public partial class PlaneControlComponent : SuperconStateComponent3D
 	}
 		= Mathf.Pi * 2;
 
-	// [ExportGroup("Rotate Character", "Rotate Character")]
-	// [Export(PropertyHint.GroupEnable)] public bool RotateCharacterEnabled = false;
-	// [Export] public Vector3 ForwardVector = Vector3.Forward;
-	// [Export] public Vector3 UpVector = Vector3.Up;
+	[ExportGroup("Rotate Character", "Rotation")]
+	[Export(PropertyHint.GroupEnable)] public bool RotationEnabled = false;
+	[Export] public Vector3 RotationPlaneNormalAlignment = Vector3.Up;
+	[ExportSubgroup("Face Movement Direction", "Rotation")]
+	[Export(PropertyHint.GroupEnable)] public bool RotationForwardEnabled = false;
+	[Export] public Vector3 RotationForwardDirectionAlignment = Vector3.Forward;
 
 	// [ExportGroup("Break MaxSpeed")]
 	// [Export(PropertyHint.GroupEnable)] public bool MaxSpeedOptionsEnabled
@@ -88,7 +90,7 @@ public partial class PlaneControlComponent : SuperconStateComponent3D
 	// 	= 5f;
 
 	// [ExportGroup("Break Angular Velocity", "Turn")]
-	// [Export(PropertyHint.GroupEnable)] public bool AngularVelocityOptionsEnabled
+	// [Export(PropertyHint.GroupEnable)] public bool TurnEnabled
 	// 	{ get; set { field = value; this.NotifyPropertyListChanged(); } }
 	// 	= false;
 	// // TODO Implement dynamic range min/max using _ValidateProperty() instead of setter
@@ -168,25 +170,25 @@ public partial class PlaneControlComponent : SuperconStateComponent3D
 	// 		.AppendIf(false "This node is not configured correctly. Did you forget to assign a required field?")
 	// 		.ToArray();
 
-	public override void _ValidateProperty(Godot.Collections.Dictionary property)
-	{
-		base._ValidateProperty(property);
-		switch (property["name"].AsString())
-		{
-			// case nameof(this.MaxSpeed):
-			// 	if (this.MaxSpeedOptionsEnabled)
-			// 		property["usage"] = (long) PropertyUsageFlags.None;
-			// 	break;
-			// case nameof(this.Deceleration):
-			// 	if (this.DecelerationOptionsEnabled)
-			// 		property["usage"] = (long) PropertyUsageFlags.None;
-			// 	break;
-			// case nameof(this.AngularVelocity):
-			// 	if (this.AngularVelocityOptionsEnabled)
-			// 		property["usage"] = (long) PropertyUsageFlags.None;
-			// 	break;
-		}
-	}
+	// public override void _ValidateProperty(Godot.Collections.Dictionary property)
+	// {
+	// 	base._ValidateProperty(property);
+	// 	switch (property["name"].AsString())
+	// 	{
+	// 		case nameof(this.MaxSpeed):
+	// 			if (this.MaxSpeedOptionsEnabled)
+	// 				property["usage"] = (long) PropertyUsageFlags.None;
+	// 			break;
+	// 		case nameof(this.Deceleration):
+	// 			if (this.DecelerationOptionsEnabled)
+	// 				property["usage"] = (long) PropertyUsageFlags.None;
+	// 			break;
+	// 		case nameof(this.AngularVelocity):
+	// 			if (this.AngularVelocityOptionsEnabled)
+	// 				property["usage"] = (long) PropertyUsageFlags.None;
+	// 			break;
+	// 	}
+	// }
 
 	protected override void _ActivityPhysicsProcess(double delta)
 	{
@@ -201,11 +203,12 @@ public partial class PlaneControlComponent : SuperconStateComponent3D
 		Vector3 currentDirection = isMoving
 			? currentVelocity.Normalized()
 			: this.Character.GlobalBasis.Forward;
-		Vector2 rawInput = this.Character.InputController?.RawMovementInput ?? Vector2.Zero;
-		float inputStrength = rawInput.Length();
+		Vector2 inputNormalized = this.Character.InputController?.RawMovementInput.Normalized() ?? Vector2.Zero;
+		float inputStrength = inputNormalized.Length();
 		bool hasInput = inputStrength > Mathf.Epsilon;
+		// TODO // FIXME This crashes if plane.Normal is Vector3.Zero, Vector3.Up, or Vector3.Down. Fix it.
 		Vector3 inputDirection = hasInput
-			? Basis.LookingAt(plane.Normal) * new Vector3(rawInput.X, rawInput.Y, 0)
+			? Basis.LookingAt(plane.Normal * -1) * new Vector3(inputNormalized.X, inputNormalized.Y, 0)
 			: Vector3.Zero;
 		Vector3 newGlobalDirection = isMoving && hasInput
 				? currentDirection.MoveToward(inputDirection, this.AngularVelocity * delta)
@@ -232,6 +235,22 @@ public partial class PlaneControlComponent : SuperconStateComponent3D
 		float newSpeed = currentSpeed.MoveToward(targetSpeed, acceleration * (float) delta);
 		this.Character.Velocity = newGlobalDirection * newSpeed
 			+ this.Character.Velocity.Project(plane.Normal);
+		if (!this.RotationEnabled)
+			return;
+		Vector3 alignBack = this.RotationPlaneNormalAlignment.IsZeroApprox()
+			? this.Character.Basis.Back
+			: this.RotationPlaneNormalAlignment.Normalized();
+		Vector3 alignUp = this.Character.GravityDirection.IsZeroApprox()
+			? this.Character.Basis.Up
+			: this.Character.GravityDirection * -1;
+		Basis alignment = !alignBack.IsParallelTo(alignUp)
+			? Basis.LookingAt(-alignBack, alignUp)
+			: Basis.Identity;
+		this.Character.GlobalBasis = alignment * (
+			this.RotationForwardEnabled
+				? Basis.LookingAt(newGlobalDirection, plane.Normal)
+				: Basis.LookingAt(plane.GetCenter() - this.Character.GlobalPosition, alignUp)
+		);
 	}
 
 	//==================================================================================================================

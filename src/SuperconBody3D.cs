@@ -19,6 +19,8 @@ public partial class SuperconBody3D : CharacterBody3D, ISuperconStateMachineOwne
 	// EXPORTS
 	//==================================================================================================================
 
+	[Export] public float Mass = 1f;
+
 	[Export] public SuperconState? RestState
 		{ get; set { field = value; this.UpdateConfigurationWarnings(); } }
 
@@ -53,6 +55,10 @@ public partial class SuperconBody3D : CharacterBody3D, ISuperconStateMachineOwne
 	public TimeSpan TimeOnFloor { get; private set; } = TimeSpan.Zero;
 	public TimeSpan TimeOnCeiling { get; private set; } = TimeSpan.Zero;
 	public TimeSpan TimeOnWall { get; private set; } = TimeSpan.Zero;
+
+	public Vector3 GravityDirection { get; private set; }
+	public float GravityMagniture { get; private set; }
+	public Vector3 GravityForce => this.GravityDirection * this.GravityMagniture;
 
 	//==================================================================================================================
 	// COMPUTED PROPERTIES
@@ -142,6 +148,7 @@ public partial class SuperconBody3D : CharacterBody3D, ISuperconStateMachineOwne
 	{
 		base._Ready();
 		this.AsStateMachineOwner().ResetState();
+		this.ResetGravity();
 	}
 
 	public override void _Process(double delta)
@@ -171,6 +178,12 @@ public partial class SuperconBody3D : CharacterBody3D, ISuperconStateMachineOwne
 	// METHODS
 	//==================================================================================================================
 
+	private void ResetGravity()
+	{
+		this.GravityDirection = ProjectSettings.GetSetting("physics/3d/default_gravity_vector").AsVector3().Normalized();
+		this.GravityMagniture = ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
+	}
+
 	private void UpdateContactTrackers(double delta)
 	{
 		this.TimeOnFloor = this.IsOnFloor() ? this.TimeOnFloor + TimeSpan.FromSeconds(delta) : TimeSpan.Zero;
@@ -182,11 +195,18 @@ public partial class SuperconBody3D : CharacterBody3D, ISuperconStateMachineOwne
 	/// Applies the given force to the character's velocity, then limits the resulting velocity's magnitude along the
 	/// direction of the force to the given maximum speed.
 	/// </summary>
-	public void ApplyForceWithMaxSpeed(Vector3 forcePxPSec, float maxSpeedPxPSec)
+	public void ApplyForceWithMaxSpeed(Vector3 force, float maxSpeedPxPSec)
 	{
-		Vector3 parallelVelocity = this.Velocity.Project(forcePxPSec.Normalized());
+		if (force.IsZeroApprox())
+			return;
+		if (this.Velocity.IsZeroApprox())
+		{
+			this.Velocity = force.LimitLength(maxSpeedPxPSec);
+			return;
+		}
+		Vector3 parallelVelocity = this.Velocity.Project(force.Normalized());
 		Vector3 orthogonalVelocity = this.Velocity - parallelVelocity;
-		float newSpeed = parallelVelocity.Length() + forcePxPSec.Length();
+		float newSpeed = parallelVelocity.Length() + force.Length();
 		if (Mathf.Abs(newSpeed) > maxSpeedPxPSec)
 			newSpeed = maxSpeedPxPSec * Math.Sign(newSpeed);
 		this.Velocity = orthogonalVelocity + parallelVelocity.Normalized() * newSpeed;
