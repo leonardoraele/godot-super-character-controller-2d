@@ -1,10 +1,11 @@
 using Godot;
+using Godot.Collections;
 using Raele.GodotUtils.Extensions;
 
 namespace Raele.Supercon.StateComponents3D;
 
 /// <summary>
-/// Allows the player to control the character using directional input to move it along a plane. e.g. To move the
+/// Allows the player to control the character using directional input to move it along a surface. e.g. To move the
 /// character over the floor or climbing a wall.
 ///
 /// You can set different speed values for forward, lateral, and backward movement.
@@ -52,10 +53,10 @@ public partial class SurfaceControlComponent3D : SuperconStateComponent3D
 
 	[ExportGroup("Rotate Character", "Rotation")]
 	[Export(PropertyHint.GroupEnable)] public bool RotationEnabled = false;
-	[Export] public Vector3 RotationForwardVector = Vector3.Forward;
-	[Export] public Vector3 RotationUpVector = Vector3.Up;
 	[Export] public AlignmentOptionsEnum RotationForwardAlignment = AlignmentOptionsEnum.MovementDirection;
-	[Export] public AlignmentOptionsEnum RotationUpAlignment = AlignmentOptionsEnum.PlaneNormal;
+	[Export] public Vector3 RotationLocalForwardDirection = Vector3.Forward;
+	[Export] public AlignmentOptionsEnum RotationUpAlignment = AlignmentOptionsEnum.SurfaceNormal;
+	[Export] public Vector3 RotationLocalUpDirection = Vector3.Up;
 
 	// [ExportGroup("Break MaxSpeed")]
 	// [Export(PropertyHint.GroupEnable)] public bool MaxSpeedOptionsEnabled
@@ -154,18 +155,45 @@ public partial class SurfaceControlComponent3D : SuperconStateComponent3D
 
 	public enum AlignmentOptionsEnum : sbyte {
 		MovementDirection = 16,
-		PlaneNormal = 32,
+		SurfaceNormal = 32,
 		CameraForward = 48,
 		Gravity = 64,
 		Global = 112,
-		NoChange = 120,
+		NoAlignment = 120,
 	}
 
 	//==================================================================================================================
-		#endregion
+	#endregion
 	//==================================================================================================================
-		#region OVERRIDES & VIRTUALS
+	#region OVERRIDES & VIRTUALS
 	//==================================================================================================================
+
+	public override void _ValidateProperty(Dictionary property)
+	{
+		base._ValidateProperty(property);
+		switch (property["name"].AsString())
+		{
+			case nameof(this.RotationLocalForwardDirection):
+				if (this.RotationForwardAlignment == AlignmentOptionsEnum.NoAlignment)
+				{
+					this.RotationLocalForwardDirection = Vector3.Forward;
+					property["usage"] = (long) PropertyUsageFlags.None;
+				}
+				if (this.RotationLocalForwardDirection.IsZeroApprox())
+					property["error"] = "The Forward direction cannot be a zero vector.";
+				break;
+			case nameof(this.RotationLocalUpDirection):
+				if (this.RotationUpAlignment == AlignmentOptionsEnum.NoAlignment)
+				{
+					this.RotationLocalUpDirection = Vector3.Up;
+					property["usage"] = (long) PropertyUsageFlags.None;
+					break;
+				}
+				if (this.RotationLocalUpDirection.IsZeroApprox())
+					property["error"] = "The Up direction cannot be a zero vector.";
+				break;
+		}
+	}
 
 	protected override void _ActivityPhysicsProcess(double delta)
 	{
@@ -202,28 +230,28 @@ public partial class SurfaceControlComponent3D : SuperconStateComponent3D
 			: this.Deceleration;
 		float newSpeed = currentSpeed.MoveToward(targetSpeed, acceleration * (float) delta);
 		this.Character.Velocity = newGlobalDirection * newSpeed
-			+ this.Character.Velocity.Project(plane.Normal);
+			+ (this.PreserveOrthogonalVelocity ? this.Character.Velocity.Project(plane.Normal) : Vector3.Zero);
 
 		if (!this.RotationEnabled)
 			return;
 
-		Basis localBasis = new Basis(this.RotationForwardVector.Cross(this.RotationUpVector), this.RotationUpVector, this.RotationForwardVector);
+		Basis localBasis = new Basis(this.RotationLocalForwardDirection.Cross(this.RotationLocalUpDirection), this.RotationLocalUpDirection, this.RotationLocalForwardDirection);
 		Vector3 forward = this.RotationForwardAlignment switch
 			{
 				AlignmentOptionsEnum.MovementDirection => newGlobalDirection,
-				AlignmentOptionsEnum.PlaneNormal => plane.Normal,
+				AlignmentOptionsEnum.SurfaceNormal => plane.Normal,
 				AlignmentOptionsEnum.CameraForward => camera.GlobalBasis.Forward.Normalized(),
 				AlignmentOptionsEnum.Gravity => this.Character.GetGravity().Normalized(),
-				AlignmentOptionsEnum.Global => this.RotationForwardVector,
+				AlignmentOptionsEnum.Global => this.RotationLocalForwardDirection,
 				_ => this.Character.GlobalBasis.Forward,
 			};
 		Vector3 up = this.RotationUpAlignment switch
 			{
 				AlignmentOptionsEnum.MovementDirection => newGlobalDirection,
-				AlignmentOptionsEnum.PlaneNormal => plane.Normal,
+				AlignmentOptionsEnum.SurfaceNormal => plane.Normal,
 				AlignmentOptionsEnum.CameraForward => camera.GlobalBasis.Forward.Normalized(),
 				AlignmentOptionsEnum.Gravity => this.Character.GetGravity().Normalized(),
-				AlignmentOptionsEnum.Global => this.RotationUpVector,
+				AlignmentOptionsEnum.Global => this.RotationLocalUpDirection,
 				_ => this.Character.GlobalBasis.Up,
 			};
 		Basis globalBasis = new Basis(forward.Cross(up), up, forward);
@@ -235,6 +263,24 @@ public partial class SurfaceControlComponent3D : SuperconStateComponent3D
 	//==================================================================================================================
 		#region METHODS
 	//==================================================================================================================
+
+	// private void SnapToSurface()
+	// {
+	// 	if (this.Character == null)
+	// 		return;
+	// 	switch (this.Surface)
+	// 	{
+	// 		case SurfaceTypeEnum.Floor when this.Character.IsOnFloor():
+	// 			this.Character.ApplyFloorSnap();
+	// 			break;
+	// 		case SurfaceTypeEnum.Wall when this.Character.IsOnWall():
+	// 			this.Character.MoveAndCollide(this.Character.GetWallNormal() * -1);
+	// 			break;
+	// 		case SurfaceTypeEnum.Ceiling when this.Character.IsOnCeiling():
+	// 			this.Character.MoveAndCollide(this.Character.GlobalBasis.Up);
+	// 			break;
+	// 	}
+	// }
 
 	public Plane? ResolveGlobalMovementPlane()
 		=> this.Surface switch
