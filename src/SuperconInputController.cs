@@ -71,8 +71,8 @@ public partial class SuperconInputController : Resource
 	/// +---------------------------+
 	/// </summary>
 	public Vector2 RawDirectionalInput
-		{ get; private set { field = value; NormalDirectionalInput = value.Normalized(); } }
-	public Vector2 NormalDirectionalInput { get; private set; }
+		{ get; private set { field = value; NormalizedDirectionalInput = value.Normalized(); } }
+	public Vector2 NormalizedDirectionalInput { get; private set; }
 	private Dictionary<string, InputBuffer> InputBuffers = new();
 
 	// -----------------------------------------------------------------------------------------------------------------

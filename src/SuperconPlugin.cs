@@ -41,7 +41,7 @@ public partial class SuperconPlugin : EditorPlugin
 		this.AddCustomType(nameof(ForceComponent3D), nameof(Node3D), GD.Load<Script>($"res://addons/{nameof(Supercon)}/src/{nameof(StateComponents3D)}/{nameof(ForceComponent3D)}.cs"), null);
 		this.AddCustomType(nameof(GravityComponent3D), nameof(Node3D), GD.Load<Script>($"res://addons/{nameof(Supercon)}/src/{nameof(StateComponents3D)}/{nameof(GravityComponent3D)}.cs"), null);
 		this.AddCustomType(nameof(ImpulseComponent3D), nameof(Node3D), GD.Load<Script>($"res://addons/{nameof(Supercon)}/src/{nameof(StateComponents3D)}/{nameof(ImpulseComponent3D)}.cs"), null);
-		this.AddCustomType(nameof(PlaneControlComponent3D), nameof(Node3D), GD.Load<Script>($"res://addons/{nameof(Supercon)}/src/{nameof(StateComponents3D)}/{nameof(PlaneControlComponent3D)}.cs"), null);
+		this.AddCustomType(nameof(SurfaceControlComponent3D), nameof(Node3D), GD.Load<Script>($"res://addons/{nameof(Supercon)}/src/{nameof(StateComponents3D)}/{nameof(SurfaceControlComponent3D)}.cs"), null);
 	}
 
 	public override void _ExitTree()
@@ -74,7 +74,7 @@ public partial class SuperconPlugin : EditorPlugin
 		this.RemoveCustomType(nameof(ForceComponent3D));
 		this.RemoveCustomType(nameof(GravityComponent3D));
 		this.RemoveCustomType(nameof(ImpulseComponent3D));
-		this.RemoveCustomType(nameof(PlaneControlComponent3D));
+		this.RemoveCustomType(nameof(SurfaceControlComponent3D));
 	}
 }
 #endif
