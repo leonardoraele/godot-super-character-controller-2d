@@ -1,13 +1,12 @@
 using Godot;
 using Raele.GodotUtils.Debug;
 using Raele.GodotUtils.Extensions;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Raele.Supercon;
 
-[Tool][GlobalClass]
+[Tool][GlobalClass][Icon($"res://addons/{nameof(Supercon)}/icons/character_body-3d.png")]
 public partial class SuperconBody3D : CharacterBody3D, ISuperconStateMachineOwner
 {
 	//==================================================================================================================

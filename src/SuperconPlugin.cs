@@ -10,13 +10,11 @@ public partial class SuperconPlugin : EditorPlugin
 {
 	public override void _EnterTree()
 	{
-		Texture2D stateIcon = GD.Load<Texture2D>($"res://addons/{nameof(Supercon)}/icons/character_body_neutral.png");
+		this.AddCustomType($"{nameof(SuperconState)}2D", nameof(Node2D), GD.Load<Script>($"res://addons/{nameof(Supercon)}/src/{nameof(SuperconState)}.cs"), GD.Load<Texture2D>($"res://addons/{nameof(Supercon)}/icons/character_body_neutral.png"));
+		this.AddCustomType($"{nameof(SuperconStateLayer)}2D", nameof(Node2D), GD.Load<Script>($"res://addons/{nameof(Supercon)}/src/{nameof(SuperconStateLayer)}.cs"), GD.Load<Texture2D>($"res://addons/{nameof(Supercon)}/icons/character_body_neutral.png"));
 
-		this.AddCustomType($"{nameof(SuperconState)}2D", nameof(Node2D), GD.Load<Script>($"res://addons/{nameof(Supercon)}/src/{nameof(SuperconState)}.cs"), stateIcon);
-		this.AddCustomType($"{nameof(SuperconStateLayer)}2D", nameof(Node2D), GD.Load<Script>($"res://addons/{nameof(Supercon)}/src/{nameof(SuperconStateLayer)}.cs"), stateIcon);
-
-		this.AddCustomType($"{nameof(SuperconState)}3D", nameof(Node3D), GD.Load<Script>($"res://addons/{nameof(Supercon)}/src/{nameof(SuperconState)}.cs"), stateIcon);
-		this.AddCustomType($"{nameof(SuperconStateLayer)}3D", nameof(Node3D), GD.Load<Script>($"res://addons/{nameof(Supercon)}/src/{nameof(SuperconStateLayer)}.cs"), stateIcon);
+		this.AddCustomType($"{nameof(SuperconState)}3D", nameof(Node3D), GD.Load<Script>($"res://addons/{nameof(Supercon)}/src/{nameof(SuperconState)}.cs"), GD.Load<Texture2D>($"res://addons/{nameof(Supercon)}/icons/character_body_neutral-3d.png"));
+		this.AddCustomType($"{nameof(SuperconStateLayer)}3D", nameof(Node3D), GD.Load<Script>($"res://addons/{nameof(Supercon)}/src/{nameof(SuperconStateLayer)}.cs"), GD.Load<Texture2D>($"res://addons/{nameof(Supercon)}/icons/character_body_neutral-3d.png"));
 
 		// Base classes
 		this.AddCustomType(nameof(SuperconStateComponent), nameof(Node), GD.Load<Script>($"res://addons/{nameof(Supercon)}/src/{nameof(SuperconStateComponent)}.cs"), null);
